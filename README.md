@@ -17,17 +17,14 @@
 
 ---
 
-[![Package Application with Pyinstaller](https://github.com/DaemonDude23/container-image-replicator/actions/workflows/main.yaml/badge.svg?branch=main)](https://github.com/DaemonDude23/container-image-replicator/actions/workflows/main.yaml)
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity)
 ![Maintainer](https://img.shields.io/badge/maintainer-DaemonDude23-blue)
-[![GitHub license](https://img.shields.io/github/license/DaemonDude23/StrapDown.js.svg)](https://github.com/DaemonDude23/StrapDown.js/blob/master/LICENSE)
-[![GitHub release](https://img.shields.io/github/release/DaemonDude23/StrapDown.js.svg)](https://GitHub.com/DaemonDude23/StrapDown.js/releases/)
-[![GitHub latest commit](https://badgen.net/github/last-commit/DaemonDude23/Strapdown.js)](https://GitHub.com/DaemonDude23/StrapDown.js/commit/)
 
-[![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/)
 [![Linux](https://svgshare.com/i/Zhy.svg)](https://svgshare.com/i/Zhy.svg)
 [![macOS](https://svgshare.com/i/ZjP.svg)](https://svgshare.com/i/ZjP.svg)
 [![Windows](https://svgshare.com/i/ZhY.svg)](https://svgshare.com/i/ZhY.svg)
+[![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/)
+[![Package Application with Pyinstaller](https://github.com/DaemonDude23/container-image-replicator/actions/workflows/main.yaml/badge.svg?branch=main)](https://github.com/DaemonDude23/container-image-replicator/actions/workflows/main.yaml)
 
 ---
 
