@@ -1,0 +1,32 @@
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: PyInstaller Linux
+        uses: JackMcKew/pyinstaller-action-linux@0.1.4
+        with:
+          path: src
+          spec: container-image-replicator-linux-x86_64.spec
+      - name: PyInstaller Windows
+        uses: JackMcKew/pyinstaller-action-windows@v0.1.2
+        with:
+          path: src
+          spec: container-image-replicator-windows-x86_64.spec
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: true
+          fail_on_unmatched_files: true
+          files: |
+            src/dist/linux/container-image-replicator-linux-x86_64
+            src/dist/windows/container-image-replicator-windows-x86_64.exe
+          prerelease: true
+name: Package Application with Pyinstaller
+'on':
+  push:
+    branches:
+      - main
+    paths:
+      - src/**

@@ -1,0 +1,16 @@
+---
+images:
+  # https://hub.docker.com/layers/library/nginx/1.23.2-alpine/images/sha256-fcba10206c0e29bc2c6c5ede2d64817c113de5bfaecf908b3b7b158a89144162?context=explore
+  - destination:
+      repository: 000000000000.dkr.ecr.us-east-1.amazonaws.com/nginx
+      # tag: 1.23.2-alpine  # optional
+    source:
+      repository: docker.io/nginx
+      tag: 1.23.2-alpine
+      # sha256: fcba10206c0e29bc2c6c5ede2d64817c113de5bfaecf908b3b7b158a89144162  # optional
+  - destination:
+      repository: 000000000000.dkr.ecr.us-east-1.amazonaws.com/apache
+      tag: 2.4.54  # optional
+    source:
+      repository: docker.io/httpd
+      tag: 2.4.54-alpine
