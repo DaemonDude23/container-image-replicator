@@ -130,7 +130,6 @@ pip3 install -U -r ./src/requirements.txt
 2022-10-22T15:19:24+0000 INFO input file successfully validated
 2022-10-22T15:19:24+0000 INFO nginx:1.23.2-alpine - source image exists locally
 2022-10-22T15:19:29+0000 INFO 000000000000.dkr.ecr.us-east-1.amazonaws.com/nginx:1.23.2-alpine - already present in destination. Skipping push
-----------------------------------------
 2022-10-22T15:19:29+0000 INFO httpd:2.4.54-alpine - source image exists locally
 2022-10-22T15:19:29+0000 WARNING httpd:2.4.54-alpine - image not found locally
 2022-10-22T15:19:29+0000 INFO httpd:2.4.54-alpine - pulling image

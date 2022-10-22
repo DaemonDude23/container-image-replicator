@@ -254,8 +254,6 @@ def actions(docker_client, docker_api, image_list: list) -> bool:
                 logging.critical(f"{destination_endpoint} - a silent error occurred when pushing the image")
         else:
             logging.info(f"{destination_endpoint} - already present in destination. Skipping push")
-
-        print("----------------------------------------")
     return True
 
 
