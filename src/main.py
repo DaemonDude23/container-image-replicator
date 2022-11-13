@@ -231,7 +231,7 @@ def actions(docker_client, docker_api, image_list: list) -> bool:
                 final_sha256 = source_sha256
                 logging.debug(f"{final_sha256} - using this valid sha256")
             else:
-                logging.warning(f"{source_repository}:{source_tag}@sha256:{source_sha256} - skipping image because sha256 is not valid")
+                logging.warning(f"{source_repository}:@sha256:{source_sha256} - skipping image because sha256 is not valid")
                 break
         except KeyError:
             logging.debug("no valid source sha256 provided, not using sha256 suffix on image URI")
