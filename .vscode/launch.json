@@ -5,8 +5,8 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "args": ["./tests/yamls/test.yaml"],
-      "name": "Test yaml",
+      "args": ["--max-workers=3", "./tests/yamls/test.yaml"],
+      "name": "Default Test",
       "type": "python",
       "request": "launch",
       "program": "${workspaceFolder}/src/main.py",

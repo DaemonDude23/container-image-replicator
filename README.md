@@ -13,6 +13,7 @@
     - [kubectl to list all of your container images](#kubectl-to-list-all-of-your-container-images)
 - [References](#references)
 - [Dev](#dev)
+  - [`mypy` for type hinting](#mypy-for-type-hinting)
   - [Code Validation](#code-validation)
 
 ---
@@ -21,12 +22,9 @@
 ![Maintainer](https://img.shields.io/badge/maintainer-DaemonDude23-blue)
 
 [![Linux](https://svgshare.com/i/Zhy.svg)](https://svgshare.com/i/Zhy.svg)
-[![macOS](https://svgshare.com/i/ZjP.svg)](https://svgshare.com/i/ZjP.svg)
 [![Windows](https://svgshare.com/i/ZhY.svg)](https://svgshare.com/i/ZhY.svg)
 [![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/)
 [![Package Application with Pyinstaller](https://github.com/DaemonDude23/container-image-replicator/actions/workflows/main.yaml/badge.svg?branch=main)](https://github.com/DaemonDude23/container-image-replicator/actions/workflows/main.yaml)
-
----
 
 # About
 
@@ -63,11 +61,13 @@ usage: container-image-replicator [-h] [--version] input_file
 
 container-image-replicator
 
-optional arguments:
-  -h, --help     show this help message and exit
+options:
+  -h, --help            show this help message and exit
 
-  input_file      path to YAML file containing registry information
-  --version, -v  show program's version number and exit
+  --max-workers MAX_WORKERS
+                        maximum number of worker threads to execute at any one time. One thread per container image (default: 5)
+  input_file            path to YAML file containing registry information
+  --version, -v         show program's version number and exit
 ```
 
 **This script does not handle authentication!**
@@ -113,7 +113,7 @@ pip3 install -U -r /path/to/src/requirements.txt
 
 ```bash
 # assuming virtualenv is already installed...
-virtualenv --python=python3.9 ./venv/
+virtualenv --python=python3.10 ./venv/
 source ./venv/bin/activate
 ./venv/bin/python -m pip install --upgrade pip
 pip3 install -U -r ./src/requirements.txt
@@ -154,6 +154,12 @@ kubectl get pods --all-namespaces -o jsonpath="{.items[*].spec.containers[*].ima
 # Dev
 
 - [docker-py](https://docker-py.readthedocs.io/en/stable/index.html)
+
+## `mypy` for type hinting
+
+```bash
+mypy ./src/main.py --check-untyped-defs
+```
 
 ## Code Validation
 
