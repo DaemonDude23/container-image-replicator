@@ -4,6 +4,12 @@
 
 ---
 
+# [v0.4.1](https://github.com/DaemonDude23/container-image-replicator/releases/tag/v0.4.1) - Dec 27 2022
+
+**Bugfixes**
+
+- Fix exception thrown when using `--version` or `--help`.
+
 # [v0.4.0](https://github.com/DaemonDude23/container-image-replicator/releases/tag/v0.4.0) - Dec 27 2022
 
 **Enhancements**

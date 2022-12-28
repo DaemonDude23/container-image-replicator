@@ -57,17 +57,20 @@ You can re-tag an image however you like, or keep it the same as it was.
 # Usage
 
 ```
-usage: container-image-replicator [-h] [--version] input_file
+usage: container-image-replicator [-h] [--max-workers MAX_WORKERS] [--version] input_file
 
 container-image-replicator
 
 options:
   -h, --help            show this help message and exit
 
+optional:
   --max-workers MAX_WORKERS
-                        maximum number of worker threads to execute at any one time. One thread per container image (default: 5)
-  input_file            path to YAML file containing registry information
+                        maximum number of worker threads to execute at any one time. One thread per container image (default: 2)
   --version, -v         show program's version number and exit
+
+required:
+  input_file            path to YAML file containing registry information
 ```
 
 **This script does not handle authentication!**

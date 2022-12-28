@@ -43,7 +43,7 @@ def init_arg_parser():
             type=int,
         )
         args_required.add_argument("input_file", action="store", help="path to YAML file containing registry information", type=Path)
-        args_optional.add_argument("--version", "-v", action="version", version="v0.4.0")
+        args_optional.add_argument("--version", "-v", action="version", version="v0.4.1")
 
         arguments = parser.parse_args()
         return arguments
@@ -304,8 +304,5 @@ if __name__ == "__main__":
         main(docker_api)
         docker_client.close()
     except KeyboardInterrupt:
-        docker_client.close()
-        exit(1)
-    except SystemExit:
         docker_client.close()
         exit(1)
