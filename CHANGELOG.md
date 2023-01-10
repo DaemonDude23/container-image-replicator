@@ -4,6 +4,12 @@
 
 ---
 
+# [v0.4.2](https://github.com/DaemonDude23/container-image-replicator/releases/tag/v0.4.2) - Jan 9 2023
+
+**Bugfixes**
+
+- Make `max-workers` actually use that number of threads.
+
 # [v0.4.1](https://github.com/DaemonDude23/container-image-replicator/releases/tag/v0.4.1) - Dec 27 2022
 
 **Bugfixes**

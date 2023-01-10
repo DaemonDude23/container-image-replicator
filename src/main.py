@@ -43,7 +43,7 @@ def init_arg_parser():
             type=int,
         )
         args_required.add_argument("input_file", action="store", help="path to YAML file containing registry information", type=Path)
-        args_optional.add_argument("--version", "-v", action="version", version="v0.4.1")
+        args_optional.add_argument("--version", "-v", action="version", version="v0.4.2")
 
         arguments = parser.parse_args()
         return arguments
@@ -238,6 +238,7 @@ def actions(docker_api, image_list: dict, arguments) -> bool:
         bool: True if no show-stopping exceptions
     """
     logging.info(f"preparing threads. Maximum threads: {arguments.max_workers}")
+    thread_pool = ThreadPoolExecutor(max_workers=arguments.max_workers)
     for image in list(image_list["images"]):
         # remove docker.io registry prefix as its implicit and not returned by the API when doing lookups
         source_repository: str = re.sub(r"^docker.io/", "", str(image["source"]["repository"]))
@@ -269,8 +270,7 @@ def actions(docker_api, image_list: dict, arguments) -> bool:
         source_endpoint: str = str(f"{source_repository}:{source_tag}")
         destination_endpoint: str = str(f"{destination_repository}:{destination_tag}")
 
-        # spawn multiple subthreads
-        thread_pool = ThreadPoolExecutor(max_workers=arguments.max_workers)
+        # create threads
         thread_pool.submit(
             check_remote,
             docker_api,
