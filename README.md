@@ -2,6 +2,8 @@
 
 - [About](#about)
 - [Usage](#usage)
+  - [CLI](#cli)
+  - [Config File](#config-file)
 - [Configuration](#configuration)
   - [Requirements:](#requirements)
   - [Installation](#installation)
@@ -56,8 +58,18 @@ You can re-tag an image however you like, or keep it the same as it was.
 
 # Usage
 
+**This script does not handle authentication!**
+
+If you're logging into [AWS ECR](https://docs.aws.amazon.com/AmazonECR/latest/userguide/getting-started-cli.html), for example, first login with something like:
+```bash
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 000000000000.dkr.ecr.us-east-1.amazonaws.com
 ```
-usage: container-image-replicator [-h] [--max-workers MAX_WORKERS] [--version] input_file
+See [References](#references).
+
+## CLI
+
+```
+usage: container-image-replicator [-h] [--max-workers MAX_WORKERS] [--force-pull-push] [--version] input_file
 
 container-image-replicator
 
@@ -67,19 +79,27 @@ options:
 optional:
   --max-workers MAX_WORKERS
                         maximum number of worker threads to execute at any one time. One thread per container image (default: 2)
+  --force-pull-push     don't check destination or local image cache and pull and push. Useful for mutable tags (default: False)
   --version, -v         show program's version number and exit
 
 required:
   input_file            path to YAML file containing registry information
 ```
 
-**This script does not handle authentication!**
+## Config File
 
-If you're logging into [AWS ECR](https://docs.aws.amazon.com/AmazonECR/latest/userguide/getting-started-cli.html), for example, first login with something like:
-```bash
-aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 000000000000.dkr.ecr.us-east-1.amazonaws.com
+This is a description of of the fields available in the config file:
+```yaml
+---
+images:  # required
+  - destination:  # required
+      repository: 000000000000.dkr.ecr.us-east-1.amazonaws.com/nginx  # required - image repository of destination
+      tag: 1.23.2-alpine  # optional - if this isn't populated, the source tag is used for the destination
+    source:  # required
+      repository: docker.io/nginx  # required
+      tag: 1.23.2-alpine  # required - image tag from source repository
+      sha256: fcba10206c0e29bc2c6c5ede2d64817c113de5bfaecf908b3b7b158a89144162  # optional
 ```
-See [References](#references).
 
 # Configuration
 
@@ -94,7 +114,7 @@ See [References](#references).
 - For local installation/use of the raw script, I use a local virtual environment to isolate dependencies:
 
 ```bash
-git clone https://github.com/DaemonDude23/container-image-replicator.git -b v0.4.2
+git clone https://github.com/DaemonDude23/container-image-replicator.git -b v0.5.0
 cd container-image-replicator
 ```
 
@@ -131,6 +151,7 @@ pip3 install -U -r ./src/requirements.txt
 ```
 ```bash
 2022-10-22T15:19:24+0000 INFO input file successfully validated
+2022-10-22T15:19:24+0000 INFO preparing threads. Maximum threads: 2
 2022-10-22T15:19:24+0000 INFO nginx:1.23.2-alpine - source image exists locally
 2022-10-22T15:19:29+0000 INFO 000000000000.dkr.ecr.us-east-1.amazonaws.com/nginx:1.23.2-alpine - already present in destination. Skipping push
 2022-10-22T15:19:29+0000 INFO httpd:2.4.54-alpine - source image exists locally
@@ -144,7 +165,8 @@ pip3 install -U -r ./src/requirements.txt
 ### kubectl to list all of your container images
 
 ```bash
-kubectl get pods --all-namespaces -o jsonpath="{.items[*].spec.containers[*].image}" | \
+kubectl get pods --all-namespaces \
+  -o jsonpath="{.items[*].spec.containers[*].image}" | \
   tr -s '[[:space:]]' '\n' | sort | uniq -c
 ```
 

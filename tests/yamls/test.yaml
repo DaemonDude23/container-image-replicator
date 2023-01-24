@@ -14,3 +14,10 @@ images:
     source:
       repository: docker.io/httpd
       tag: 2.4.54-alpine
+  - destination:
+      repository: 000000000000.dkr.ecr.us-east-1.amazonaws.com/apache
+    source:
+      forcePull: true
+      forcePush: true
+      repository: docker.io/httpd
+      tag: 2.4-alpine

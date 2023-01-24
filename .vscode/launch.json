@@ -14,6 +14,15 @@
       "justMyCode": true
     },
     {
+      "args": ["--max-workers=1", "./tests/yamls/test2.yaml"],
+      "name": "Hidden Test",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/main.py",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
       "args": ["--version"],
       "name": "--version",
       "type": "python",

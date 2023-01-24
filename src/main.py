@@ -3,13 +3,13 @@ import argparse
 import logging
 import re
 from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import wait
 from pathlib import Path
 from sys import stdout
 
 # noreorder
 import docker, yaml  # type: ignore
 import yaml  # type: ignore
-
 
 logging.basicConfig(
     level=logging.INFO,
@@ -28,7 +28,7 @@ def init_docker():
 def init_arg_parser():
     try:
         parser = argparse.ArgumentParser(
-            description="container-image-replicator",
+            description="description: make copies of container images from one registry to another",
             formatter_class=argparse.ArgumentDefaultsHelpFormatter,
             prog="container-image-replicator",
         )
@@ -42,8 +42,16 @@ def init_arg_parser():
             help="maximum number of worker threads to execute at any one time. One thread per container image",
             type=int,
         )
+        args_optional.add_argument(
+            "--force-pull-push",
+            action="store_true",
+            default=False,
+            dest="force_pull_push",
+            help="don't check destination or local image cache and pull and push.\
+                Useful for mutable tags. Be careful, as this can hit rate limits quickly!",
+        )
+        args_optional.add_argument("--version", "-v", action="version", version="v0.5.0")
         args_required.add_argument("input_file", action="store", help="path to YAML file containing registry information", type=Path)
-        args_optional.add_argument("--version", "-v", action="version", version="v0.4.2")
 
         arguments = parser.parse_args()
         return arguments
@@ -173,7 +181,6 @@ def verify_destination_image(docker_client, uri: str) -> bool:
         bool: True if destination image already exists
     """
     try:
-        # docker_client.images.get(uri)
         docker_client.images.get_registry_data(uri)
         logging.debug(f"{uri} - verified exists in destination")
         return True
@@ -198,41 +205,67 @@ def valid_sha256(sha256_hash: str) -> bool:
 
 
 def check_remote(
-    docker_api, source_endpoint, source_repository, source_tag, destination_endpoint, destination_repository, destination_tag, final_sha256
+    arguments,
+    docker_api,
+    source_endpoint: str,
+    source_repository: str,
+    source_tag: str,
+    destination_endpoint: str,
+    destination_repository: str,
+    destination_tag: str,
+    final_sha256: str,
+    force_pull: bool,
+    force_push: bool,
 ):
-    """don't push image if its already in the destination
+    """figure out whether to force pull/push, and if not, check destination to see if pushing is required
 
     Args:
-        docker_api (_type_): api object
-        source_endpoint (_type_): source endpoint to look for (repository+tag)
-        source_repository (_type_): source repository to look for
-        source_tag (_type_): source tag to look for
-        destination_endpoint (_type_): full endpoint URI including tag
-        destination_repository (_type_): destination repository for re-tagging
-        destination_tag (_type_): destination tag tag for re-tagging
-        final_sha256 (_type_): sha256 to look for
+        arguments (Any): cli arguments
+        docker_api (Any): api object
+        source_endpoint (str): source endpoint to look for (repository+tag)
+        source_repository (str): source repository to look for
+        source_tag (str): source tag to look for
+        destination_endpoint (str): full endpoint URI including tag
+        destination_repository (str): destination repository for re-tagging
+        destination_tag (str): destination tag tag for re-tagging
+        final_sha256 (str): sha256 to look for
+        force_pull (bool): force pull, used for immutable tags
+        force_push (bool): force push, used for immutable tags
     """
-    if not verify_destination_image(docker_client, destination_endpoint):
-        # see if image exists locally and pull from the source registry if it doesn't
-        verify_local_image(
-            docker_api, source_endpoint, source_repository, source_tag, destination_repository, destination_tag, final_sha256
-        )
-        push_image(destination_repository, destination_tag)
+    if arguments.force_pull_push or force_pull or force_push:
+        if force_pull:
+            pull_image(source_repository, source_tag)
+        if force_push:
+            push_image(destination_repository, destination_tag)
+
         if verify_destination_image(docker_client, destination_endpoint):
             logging.info(f"{destination_endpoint} - image pushed successfully")
         else:
             logging.critical(f"{destination_endpoint} - a silent error occurred when pushing the image")
     else:
-        logging.info(f"{destination_endpoint} - already present in destination. Skipping push")
+        if not verify_destination_image(docker_client, destination_endpoint):
+            # see if image exists locally and pull from the source registry if it doesn't
+            verify_local_image(
+                docker_api, source_endpoint, source_repository, source_tag, destination_repository, destination_tag, final_sha256
+            )
+            push_image(destination_repository, destination_tag)
+
+            if verify_destination_image(docker_client, destination_endpoint):
+                logging.info(f"{destination_endpoint} - image pushed successfully")
+            else:
+                logging.critical(f"{destination_endpoint} - a silent error occurred when pushing the image")
+        else:
+            logging.info(f"{destination_endpoint} - already present in destination. Skipping push")
+    return True
 
 
-def actions(docker_api, image_list: dict, arguments) -> bool:
+def actions(arguments, docker_api, image_list: dict) -> bool:
     """performs bulk of logic with replicating images
 
     Args:
-        docker_api (_type_): client object
+        docker_api (Any): client object
         image_list (list): list of images to parse to perform pull/push
-        args (_type_): CLI arguments
+        args (Any): CLI arguments
 
     Returns:
         bool: True if no show-stopping exceptions
@@ -245,6 +278,16 @@ def actions(docker_api, image_list: dict, arguments) -> bool:
         source_tag: str = str(image["source"]["tag"])
         destination_repository: str = str(image["destination"]["repository"])
         destination_tag: str = str()
+
+        # check forcePull and forcePush values
+        try:
+            force_pull: bool = bool(image["source"]["forcePull"])
+        except KeyError:
+            force_pull = False
+        try:
+            force_push: bool = bool(image["source"]["forcePush"])
+        except KeyError:
+            force_push = False
 
         # destination tag is optional, falls back to source tag
         try:
@@ -271,17 +314,24 @@ def actions(docker_api, image_list: dict, arguments) -> bool:
         destination_endpoint: str = str(f"{destination_repository}:{destination_tag}")
 
         # create threads
-        thread_pool.submit(
-            check_remote,
-            docker_api,
-            source_endpoint,
-            source_repository,
-            source_tag,
-            destination_endpoint,
-            destination_repository,
-            destination_tag,
-            final_sha256,
-        )
+        threads = [
+            thread_pool.submit(
+                check_remote,
+                arguments,
+                docker_api,
+                source_endpoint,
+                source_repository,
+                source_tag,
+                destination_endpoint,
+                destination_repository,
+                destination_tag,
+                final_sha256,
+                force_pull,
+                force_push,
+            )
+        ]
+
+    wait(threads, return_when="ALL_COMPLETED")
     return True
 
 
@@ -289,13 +339,13 @@ def main(docker_api):
     """main
 
     Args:
-        docker_client (_type_): client object
-        docker_api (_type_): api object
+        docker_client (Any): client object
+        docker_api (Any): api object
     """
     arguments = init_arg_parser()
-    image_list: dict = yaml.safe_load(Path(arguments.input_file).read_text())
+    image_list = yaml.safe_load(Path(arguments.input_file).read_text())
     parse_image_list_yaml(image_list)
-    actions(docker_api, image_list, arguments)
+    actions(arguments, docker_api, image_list)
 
 
 if __name__ == "__main__":
