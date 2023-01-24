@@ -50,7 +50,7 @@ def init_arg_parser():
             help="don't check destination or local image cache and pull and push.\
                 Useful for mutable tags. Be careful, as this can hit rate limits quickly!",
         )
-        args_optional.add_argument("--version", "-v", action="version", version="v0.5.0")
+        args_optional.add_argument("--version", "-v", action="version", version="b0.6.0")
         args_required.add_argument("input_file", action="store", help="path to YAML file containing registry information", type=Path)
 
         arguments = parser.parse_args()
@@ -232,22 +232,25 @@ def check_remote(
         force_pull (bool): force pull, used for immutable tags
         force_push (bool): force push, used for immutable tags
     """
-    if arguments.force_pull_push or force_pull or force_push:
-        if force_pull:
-            pull_image(source_repository, source_tag)
-        if force_push:
-            push_image(destination_repository, destination_tag)
+    image_already_pushed: bool = False
+    if arguments.force_pull_push or force_pull:
+        pull_image(source_repository, source_tag)
+    if arguments.force_pull_push or force_push:
+        push_image(destination_repository, destination_tag)
 
         if verify_destination_image(docker_client, destination_endpoint):
             logging.info(f"{destination_endpoint} - image pushed successfully")
+            image_already_pushed = True
         else:
             logging.critical(f"{destination_endpoint} - a silent error occurred when pushing the image")
-    else:
+
+    if not image_already_pushed:
         if not verify_destination_image(docker_client, destination_endpoint):
             # see if image exists locally and pull from the source registry if it doesn't
             verify_local_image(
                 docker_api, source_endpoint, source_repository, source_tag, destination_repository, destination_tag, final_sha256
             )
+
             push_image(destination_repository, destination_tag)
 
             if verify_destination_image(docker_client, destination_endpoint):
@@ -256,6 +259,7 @@ def check_remote(
                 logging.critical(f"{destination_endpoint} - a silent error occurred when pushing the image")
         else:
             logging.info(f"{destination_endpoint} - already present in destination. Skipping push")
+
     return True
 
 

@@ -114,7 +114,7 @@ images:  # required
 - For local installation/use of the raw script, I use a local virtual environment to isolate dependencies:
 
 ```bash
-git clone https://github.com/DaemonDude23/container-image-replicator.git -b v0.5.0
+git clone https://github.com/DaemonDude23/container-image-replicator.git -b b0.6.0
 cd container-image-replicator
 ```
 

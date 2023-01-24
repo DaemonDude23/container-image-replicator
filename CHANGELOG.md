@@ -4,7 +4,14 @@
 
 ---
 
-# [v0.5.0](https://github.com/DaemonDude23/container-image-replicator/releases/tag/v0.5.0) - Jan 23 2023
+# [v0.6.0](https://github.com/DaemonDude23/container-image-replicator/releases/tag/v0.6.0) - Jan 23 2023
+
+**Enhancements**
+
+- Reduce `if` conditions for force pull or push.
+- Remove a redundant check on the destination repo.
+
+# [0.6.0](https://github.com/DaemonDude23/container-image-replicator/releases/tag/b0.6.0) - Jan 23 2023
 
 **Enhancements**
 
