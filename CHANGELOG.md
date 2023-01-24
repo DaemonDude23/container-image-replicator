@@ -10,6 +10,7 @@
 
 - Add CLI flag `--force-pull-push` to force pulling/pushing images even if the tag exists in the remote repository. Use `[]source.forcePull` and or `[]source.forcePush` to fine-tune these properties on a per-image basis instead of globally with this CLI flag.
   - **Beware as this can count against rate limits. Use wisely!**
+  - This is useful for when you source images with mutable tags, like `docker.io/httpd:2.4` where the patch version is being updated for this same image tag across time.
 
 **Housekeeping**
 
