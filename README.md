@@ -49,6 +49,8 @@ images:
       repository: 000000000000.dkr.ecr.us-east-1.amazonaws.com/apache
       tag: 2.4.54  # optional
     source:
+      forcePull: true
+      forcePush: false
       repository: docker.io/httpd
       tag: 2.4.54-alpine
 ```
@@ -69,18 +71,21 @@ See [References](#references).
 ## CLI
 
 ```
-usage: container-image-replicator [-h] [--max-workers MAX_WORKERS] [--force-pull-push] [--version] input_file
+usage: container-image-replicator [-h] [--version] [--max-workers MAX_WORKERS] [--log-level LOG_LEVEL] [--force-pull-push] [--no-colors] input_file
 
-container-image-replicator
+description: make copies of container images from one registry to another
 
 options:
   -h, --help            show this help message and exit
 
 optional:
+  --version, -v         show program's version number and exit
   --max-workers MAX_WORKERS
                         maximum number of worker threads to execute at any one time. One thread per container image (default: 2)
-  --force-pull-push     don't check destination or local image cache and pull and push. Useful for mutable tags (default: False)
-  --version, -v         show program's version number and exit
+  --log-level LOG_LEVEL
+                        set logging level (INFO, ERROR, DEBUG) (default: INFO)
+  --force-pull-push     don't check destination or local image cache and pull and push. Useful for mutable tags. Be careful, as this can hit rate limits quickly! (default: False)
+  --no-colors           disable color output from the logger (default: False)
 
 required:
   input_file            path to YAML file containing registry information
@@ -114,7 +119,7 @@ images:  # required
 - For local installation/use of the raw script, I use a local virtual environment to isolate dependencies:
 
 ```bash
-git clone https://github.com/DaemonDude23/container-image-replicator.git -b b0.6.0
+git clone https://github.com/DaemonDude23/container-image-replicator.git -b v0.7.0
 cd container-image-replicator
 ```
 
@@ -136,7 +141,7 @@ pip3 install -U -r /path/to/src/requirements.txt
 
 ```bash
 # assuming virtualenv is already installed...
-virtualenv --python=python3.10 ./venv/
+virtualenv --python=python3.11 ./venv/
 source ./venv/bin/activate
 ./venv/bin/python -m pip install --upgrade pip
 pip3 install -U -r ./src/requirements.txt

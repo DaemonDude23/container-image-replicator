@@ -6,34 +6,38 @@ from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import wait
 from pathlib import Path
 from sys import stdout
+from time import sleep
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import LiteralString
+from typing import Optional
+from typing import Tuple
 
-# noreorder
-import docker, yaml  # type: ignore
-import yaml  # type: ignore
-
-logging.basicConfig(
-    level=logging.INFO,
-    datefmt="%Y-%m-%dT%H:%M:%S%z",
-    stream=stdout,
-    format="%(asctime)s %(levelname)s %(message)s",
-)
+import coloredlogs
+import docker
+import yaml
 
 
-def init_docker():
+def init_docker() -> Any | Any:
     docker_client = docker.from_env()
     docker_api = docker.APIClient()
     return docker_client, docker_api
 
 
-def init_arg_parser():
+def init_arg_parser() -> Any:
     try:
         parser = argparse.ArgumentParser(
             description="description: make copies of container images from one registry to another",
             formatter_class=argparse.ArgumentDefaultsHelpFormatter,
             prog="container-image-replicator",
         )
+
         args_optional = parser.add_argument_group("optional")
         args_required = parser.add_argument_group("required")
+
+        args_optional.add_argument("--version", "-v", action="version", version="v0.7.0")
+
         args_optional.add_argument(
             "--max-workers",
             action="store",
@@ -42,6 +46,15 @@ def init_arg_parser():
             help="maximum number of worker threads to execute at any one time. One thread per container image",
             type=int,
         )
+
+        args_optional.add_argument(
+            "--log-level",
+            action="store",
+            default="INFO",
+            dest="log_level",
+            help="set logging level (INFO, ERROR, DEBUG)",
+        )
+
         args_optional.add_argument(
             "--force-pull-push",
             action="store_true",
@@ -50,17 +63,25 @@ def init_arg_parser():
             help="don't check destination or local image cache and pull and push.\
                 Useful for mutable tags. Be careful, as this can hit rate limits quickly!",
         )
-        args_optional.add_argument("--version", "-v", action="version", version="b0.6.0")
+
+        args_optional.add_argument(
+            "--no-colors",
+            action="store_true",
+            default=False,
+            dest="no_colors",
+            help="disable color output from the logger",
+        )
+
         args_required.add_argument("input_file", action="store", help="path to YAML file containing registry information", type=Path)
 
         arguments = parser.parse_args()
         return arguments
     except argparse.ArgumentError:
-        logging.fatal("failed to parse arguments")
+        print("failed to parse arguments")
         exit(1)
 
 
-def parse_image_list_yaml(image_list: dict) -> bool:
+def parse_image_list_yaml(image_list: Dict[LiteralString, Any]) -> bool:
     """searches for each element in the list for all expected keys/values
 
     Args:
@@ -123,8 +144,7 @@ def push_image(repository: str, tag: str) -> bool:
         docker_client.images.push(repository, tag=tag)
         return True
     except docker.errors.APIError as e:
-        logging.critical(f"{repository}:{tag} - failed to push image")
-        logging.critical(e)
+        logging.error(f"{repository}:{tag} - failed to push image")
         return False
 
 
@@ -171,7 +191,7 @@ def verify_local_image(
         return False
 
 
-def verify_destination_image(docker_client, uri: str) -> bool:
+def verify_destination_image(docker_client: Any, uri: str) -> Tuple[str, int]:
     """verify the image exists in the destination
 
     Args:
@@ -182,11 +202,12 @@ def verify_destination_image(docker_client, uri: str) -> bool:
     """
     try:
         docker_client.images.get_registry_data(uri)
-        logging.debug(f"{uri} - verified exists in destination")
-        return True
-    except docker.errors.APIError or docker.errors.ImageNotFound as e:
-        logging.debug(e)
-        return False
+        logging.debug(f"{uri} - verified this exists in destination")
+        return "exists", 200
+    except docker.errors.ImageNotFound as e:  # reasonable error
+        return "does not exist", int(e.status_code)
+    except docker.errors.APIError as e:  # bad error
+        return f"{e.explanation}", int(e.status_code)
 
 
 def valid_sha256(sha256_hash: str) -> bool:
@@ -205,8 +226,8 @@ def valid_sha256(sha256_hash: str) -> bool:
 
 
 def check_remote(
-    arguments,
-    docker_api,
+    arguments: Any,
+    docker_api: Any,
     source_endpoint: str,
     source_repository: str,
     source_tag: str,
@@ -216,7 +237,7 @@ def check_remote(
     final_sha256: str,
     force_pull: bool,
     force_push: bool,
-):
+) -> bool:
     """figure out whether to force pull/push, and if not, check destination to see if pushing is required
 
     Args:
@@ -232,43 +253,37 @@ def check_remote(
         force_pull (bool): force pull, used for immutable tags
         force_push (bool): force push, used for immutable tags
     """
-    image_already_pushed: bool = False
+    # image_already_pushed: bool = False
     if arguments.force_pull_push or force_pull:
         pull_image(source_repository, source_tag)
     if arguments.force_pull_push or force_push:
         push_image(destination_repository, destination_tag)
+        sleep(1)
 
-        if verify_destination_image(docker_client, destination_endpoint):
-            logging.info(f"{destination_endpoint} - image pushed successfully")
-            image_already_pushed = True
-        else:
-            logging.critical(f"{destination_endpoint} - a silent error occurred when pushing the image")
-
-    if not image_already_pushed:
-        if not verify_destination_image(docker_client, destination_endpoint):
-            # see if image exists locally and pull from the source registry if it doesn't
-            verify_local_image(
-                docker_api, source_endpoint, source_repository, source_tag, destination_repository, destination_tag, final_sha256
-            )
-
-            push_image(destination_repository, destination_tag)
-
-            if verify_destination_image(docker_client, destination_endpoint):
-                logging.info(f"{destination_endpoint} - image pushed successfully")
-            else:
-                logging.critical(f"{destination_endpoint} - a silent error occurred when pushing the image")
-        else:
-            logging.info(f"{destination_endpoint} - already present in destination. Skipping push")
+    verify_destination, status_code = verify_destination_image(docker_client, destination_endpoint)
+    if status_code == 404:
+        logging.error(f"{destination_endpoint} - {verify_destination}")
+    elif verify_destination == "exists":
+        logging.info(f"{destination_endpoint} - image pushed successfully")
+        # image_already_pushed = True
+    elif verify_destination == "does not exist":
+        # see if image exists locally and pull from the source registry if it doesn't
+        verify_local_image(
+            docker_api, source_endpoint, source_repository, source_tag, destination_repository, destination_tag, final_sha256
+        )
+        push_image(destination_repository, destination_tag)
+    else:
+        logging.error(f"{destination_endpoint} - {verify_destination}")
 
     return True
 
 
-def actions(arguments, docker_api, image_list: dict) -> bool:
+def actions(arguments: Any, docker_api: Any, image_list: Any) -> bool:
     """performs bulk of logic with replicating images
 
     Args:
         docker_api (Any): client object
-        image_list (list): list of images to parse to perform pull/push
+        image_list (dict): list of images to parse to perform pull/push
         args (Any): CLI arguments
 
     Returns:
@@ -339,7 +354,7 @@ def actions(arguments, docker_api, image_list: dict) -> bool:
     return True
 
 
-def main(docker_api):
+def main(docker_api: Any) -> None:
     """main
 
     Args:
@@ -347,7 +362,27 @@ def main(docker_api):
         docker_api (Any): api object
     """
     arguments = init_arg_parser()
-    image_list = yaml.safe_load(Path(arguments.input_file).read_text())
+
+    if arguments.log_level == "INFO":
+        log_level = "INFO"
+    elif arguments.log_level == "ERROR":
+        log_level = "ERROR"
+    elif arguments.log_level == "DEBUG":
+        log_level = "DEBUG"
+    else:
+        print("failed to determine the specified value for --log-level")
+
+    if arguments.no_colors:
+        logging.basicConfig(
+            level=eval(f"logging.{log_level}"),
+            datefmt="%Y-%m-%dT%H:%M:%S%z",
+            stream=stdout,
+            format="%(asctime)s %(levelname)s %(message)s",
+        )
+    else:
+        coloredlogs.install(level=log_level, fmt="%(asctime)s %(levelname)s %(message)s", datefmt="%Y-%m-%dT%H:%M:%S%z")
+
+    image_list: Dict[LiteralString, List[Any]] = yaml.safe_load(Path(arguments.input_file).read_text())
     parse_image_list_yaml(image_list)
     actions(arguments, docker_api, image_list)
 

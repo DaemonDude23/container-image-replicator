@@ -14,8 +14,35 @@
       "justMyCode": true
     },
     {
+      "args": ["--log-level=DEBUG", "./tests/yamls/test2.yaml"],
+      "name": "Log Level: DEBUG",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/main.py",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "args": ["--max-workers=1", "--log-level=ERROR", "./tests/yamls/test2.yaml"],
+      "name": "Log Level: ERROR",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/main.py",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
       "args": ["--max-workers=1", "./tests/yamls/test2.yaml"],
       "name": "Hidden Test",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/main.py",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "args": ["--max-workers=1", "--no-colors", "./tests/yamls/test2.yaml"],
+      "name": "Hidden Test (no colors)",
       "type": "python",
       "request": "launch",
       "program": "${workspaceFolder}/src/main.py",

@@ -1,8 +1,24 @@
-**Changelog**
-
-- [Changelog](#changelog)
+**Changelog - Container Image Replicator**
 
 ---
+
+# [v0.7.0](https://github.com/DaemonDude23/container-image-replicator/releases/tag/v0.7.0) - May 24 2023
+
+**Enhancements**
+
+logging
+- Added default coloration of logs (turn it off with argument `--no-colors`).
+  - Add much improved error detail instead of `a silent error has occurred`, replacing it with (example) `denied: Your authorization token has expired. Reauthenticate and try again.`
+
+**Bugfixes**
+
+- Update PIP dependencies.
+  - Pin `requests` to `<=2.29.0` possibly prevent this issue: [https://github.com/docker/docker-py/issues/3113](https://github.com/docker/docker-py/issues/3113)
+
+**Housekeeping**
+
+- pre-commit-config updates.
+  - `mypy --strict` added and more typing.
 
 # [v0.6.0](https://github.com/DaemonDude23/container-image-replicator/releases/tag/v0.6.0) - Jan 23 2023
 

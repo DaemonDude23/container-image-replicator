@@ -1,3 +1,4 @@
+---
 repos:
   - hooks:
       - id: check-case-conflict
@@ -9,9 +10,9 @@ repos:
       - id: detect-private-key
       - id: end-of-file-fixer
       - id: fix-byte-order-marker
-      - id: fix-encoding-pragma
-        args:
-          - --remove
+      - args:
+          - '--remove'
+        id: fix-encoding-pragma
       - id: mixed-line-ending
       - args:
           - '--maxkb=1024'
@@ -28,18 +29,23 @@ repos:
         id: check-added-large-files
       - id: requirements-txt-fixer
       - id: check-ast
-    repo: 'https://github.com/pre-commit/pre-commit-hooks'
+    repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
-  - repo: https://github.com/asottile/reorder_python_imports
-    rev: v3.9.0
-    hooks:
-    - id: reorder-python-imports
-      args: [--application-directories, '.:src', --py36-plus]
   - hooks:
-      - id: black
+      - args: [--application-directories, '.:src', --py36-plus]
+        id: reorder-python-imports
+    repo: https://github.com/asottile/reorder_python_imports
+    rev: v3.9.0
+  - hooks:
+      - args:
+          - '--line-length'
+          - '140'
+        id: black
         language_version: python3.11
-        args:
-          - --line-length
-          - "140"
     repo: https://github.com/psf/black
-    rev: 22.12.0
+    rev: 23.3.0
+  - hooks:
+      - args: ["--strict", "--non-interactive", "--install-types", "--ignore-missing-imports"]
+        id: mypy
+    repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.3.0
