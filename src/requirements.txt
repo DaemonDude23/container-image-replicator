@@ -1,5 +1,5 @@
 coloredlogs==15.0.1
-docker==6.1.2
+docker==6.1.3
 PyYAML==6.0
 requests<=2.29.0  # https://github.com/docker/docker-py/issues/3113
-# types-PyYAML==6.0.12.9
+verboselogs==1.7

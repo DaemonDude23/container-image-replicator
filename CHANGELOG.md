@@ -2,13 +2,36 @@
 
 ---
 
+# [v0.8.0](https://github.com/DaemonDude23/container-image-replicator/releases/tag/v0.8.0) - June 1 2023
+
+**Enhancements**
+
+- Logging
+  - Added support for `success` logs with the `verboselogs` library.
+  - Added exception catching for _input file not found_ and _failed to parse scenarios_.
+- Added example RegEx named capture group example for those using log aggregation tools.
+
+**Bugfixes**
+
+- Fixed issue where if the destination image didn't already exist, CIR wouldn't attempt a _push_.
+- _Hopefully_ fixed the broken PyInstaller binaries.
+
+**Housekeeping**
+
+- pre-commit
+  - Removed `mypy` pre-commit hook.
+  - Added [`vermin`](https://github.com/netromdk/vermin) to test minimum Python version required, which is apparently lower than I thought at `v3.6`
+- Docs
+  - Added image of prettily-colored screenshot of command output.
+- Added TODO list/musings for future plans to expand functionality of this script at the bottom of [README.md](README.md).
+
 # [v0.7.0](https://github.com/DaemonDude23/container-image-replicator/releases/tag/v0.7.0) - May 24 2023
 
 **Enhancements**
 
-logging
-- Added default coloration of logs (turn it off with argument `--no-colors`).
-  - Add much improved error detail instead of `a silent error has occurred`, replacing it with (example) `denied: Your authorization token has expired. Reauthenticate and try again.`
+- Logging
+  - Added default coloration of logs (turn it off with argument `--no-colors`).
+    - Add much improved error detail instead of `a silent error has occurred`, replacing it with (example) `denied: Your authorization token has expired. Reauthenticate and try again.`
 
 **Bugfixes**
 

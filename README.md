@@ -1,4 +1,4 @@
-**container-image-replicator**
+**container-image-replicator** (_CIR_ for short)
 
 - [About](#about)
 - [Usage](#usage)
@@ -17,6 +17,8 @@
 - [Dev](#dev)
   - [`mypy` for type hinting](#mypy-for-type-hinting)
   - [Code Validation](#code-validation)
+  - [Miscellaneous Info](#miscellaneous-info)
+  - [The Future](#the-future)
 
 ---
 
@@ -110,7 +112,7 @@ images:  # required
 
 ## Requirements:
 
-- Python `3.7+` (or manually adjust [./src/requirements.txt](./src/requirements.txt) with more broad constraints)
+- Python `3.6+` (or manually adjust [./src/requirements.txt](./src/requirements.txt) with more broad constraints)
 - `docker` installed and running on the system where this script executed, and sufficient permissions for the user executing `container-image-replicator`
 
 ## Installation
@@ -119,7 +121,7 @@ images:  # required
 - For local installation/use of the raw script, I use a local virtual environment to isolate dependencies:
 
 ```bash
-git clone https://github.com/DaemonDude23/container-image-replicator.git -b v0.7.0
+git clone https://github.com/DaemonDude23/container-image-replicator.git -b v0.8.0
 cd container-image-replicator
 ```
 
@@ -152,20 +154,11 @@ pip3 install -U -r ./src/requirements.txt
 ### Example
 
 ```bash
-./src/main.py ./tests/yamls/test.yaml
+# this file doesn't exist in git since it contains my account IDs, but just point it to ./tests/yamls/test1.yaml after updating it
+./src/main.py ./tests/yamls/test2.yaml
 ```
-```bash
-2022-10-22T15:19:24+0000 INFO input file successfully validated
-2022-10-22T15:19:24+0000 INFO preparing threads. Maximum threads: 2
-2022-10-22T15:19:24+0000 INFO nginx:1.23.2-alpine - source image exists locally
-2022-10-22T15:19:29+0000 INFO 000000000000.dkr.ecr.us-east-1.amazonaws.com/nginx:1.23.2-alpine - already present in destination. Skipping push
-2022-10-22T15:19:29+0000 INFO httpd:2.4.54-alpine - source image exists locally
-2022-10-22T15:19:29+0000 WARNING httpd:2.4.54-alpine - image not found locally
-2022-10-22T15:19:29+0000 INFO httpd:2.4.54-alpine - pulling image
-2022-10-22T15:19:33+0000 INFO httpd:2.4.54-alpine - image pulled successfully
-2022-10-22T15:19:36+0000 INFO 000000000000.dkr.ecr.us-east-1.amazonaws.com/apache:2.4.54 - pushing image
-2022-10-22T15:19:45+0000 INFO 000000000000.dkr.ecr.us-east-1.amazonaws.com/apache:2.4.54 - image pushed successfully
-```
+
+![output-example](docs/images/output-example.png)
 
 ### kubectl to list all of your container images
 
@@ -196,3 +189,24 @@ mypy ./src/main.py --check-untyped-defs
 ```bash
 mypy --install-types --non-interactive --ignore-missing-imports src/main.py
 ```
+
+## Miscellaneous Info
+
+If you need a named capture group to capture logs in a semi-structed way, this should work:
+
+```
+(?<timestamp>^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}-\d{4})\s(?<level>\w+)\s(?<message>.+)
+```
+
+## The Future
+
+Any help with these things would be appreciated.
+
+- I'm considering adding support for
+  - [PodMan](https://github.com/containers/podman-py) to push images. This would allow a non-`root` user to run this which is always good.
+  - Building and pushing images, not _just_ pulling them from somewhere else.
+    - This one is probably pretty easy. `-f` equivalent field in the config file for the Dockerfile, the build context, build-args, etc.
+  - Scan **Kubernetes** and generate a file containing all images, allowing the user to customize it further for their specific destination repositories.
+    - Equivalent of `kubectl get` for Pods with `annotations` that are watched by CIR and periodically
+    - Can be run inside of Kubernetes or outside of it.
+    - Would require building and maintaining container images and a Helm Chart.
