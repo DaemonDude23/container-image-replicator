@@ -1,14 +1,12 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-
 block_cipher = None
-
 
 a = Analysis(['main.py'],
              pathex=['./src/'],
              binaries=[],
              datas=[],
-             hiddenimports=[],
+             hiddenimports=['verboselogs'],
              hookspath=[],
              runtime_hooks=[],
              excludes=[],
@@ -16,8 +14,8 @@ a = Analysis(['main.py'],
              win_private_assemblies=False,
              cipher=block_cipher,
              noarchive=False)
-pyz = PYZ(a.pure, a.zipped_data,
-             cipher=block_cipher)
+
+pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
 exe = EXE(pyz,
           a.scripts,
@@ -36,4 +34,4 @@ exe = EXE(pyz,
           disable_windowed_traceback=False,
           target_arch=None,
           codesign_identity=None,
-          entitlements_file=None )
+          entitlements_file=None)

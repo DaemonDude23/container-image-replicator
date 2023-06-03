@@ -2,6 +2,12 @@
 
 ---
 
+# [v0.9.0](https://github.com/DaemonDude23/container-image-replicator/releases/tag/v0.9.0) - June 3 2023
+
+**Bugfixes**
+
+- No code changes, just fixes for the PyInstaller spec files which should fully resolve their issues.
+
 # [v0.8.0](https://github.com/DaemonDude23/container-image-replicator/releases/tag/v0.8.0) - June 1 2023
 
 **Enhancements**
