@@ -2,9 +2,31 @@
 
 ---
 
-# [v0.9.0](https://github.com/DaemonDude23/container-image-replicator/releases/tag/v0.9.0) - June 3 2023
+# [v0.10.0](https://github.com/DaemonDude23/container-image-replicator/releases/tag/v0.10.0) - August 3 2023
+
+**Enhancements**
+
+- Added the ability to **build** and push images, not just replicate. See config syntax examples in [README.md](README.md).
+- Switched to **Nuitka**, replacing **PyInstaller** for generating binaries. Let me know if any of the builds (Linux/Windows/MacOS) have issues.
+  - Currently building a Python `3.11.4` image.
 
 **Bugfixes**
+
+- Fixed inconsistent and contradictory reporting from logs about an image being present already, and notify user when an image is pushed successfully.
+- Fixed error that prevented the use of the `--no-colors` flag.
+  - Added a singular alias for the plural. These have the same effect:
+    - `--no-colors`
+    - `--no-color`
+
+**Housekeeping**
+
+- pre-commit
+  - config updates and enabled `mypy`.
+- Added more typing. Bumped minimum Python version to 3.11 due to use of the newer typing mechanisms.
+- Corrected some docstrings.
+- `PyYAML` package updated.
+
+# [v0.9.0](https://github.com/DaemonDude23/container-image-replicator/releases/tag/v0.9.0) - June 3 2023
 
 - No code changes, just fixes for the PyInstaller spec files which should fully resolve their issues.
 
@@ -26,7 +48,7 @@
 
 - pre-commit
   - Removed `mypy` pre-commit hook.
-  - Added [`vermin`](https://github.com/netromdk/vermin) to test minimum Python version required, which is apparently lower than I thought at `v3.6`
+  - Added [`vermin`](https://github.com/netromdk/vermin) to test minimum Python version required, which is `v3.11`
 - Docs
   - Added image of prettily-colored screenshot of command output.
 - Added TODO list/musings for future plans to expand functionality of this script at the bottom of [README.md](README.md).

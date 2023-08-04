@@ -8,8 +8,10 @@
   - [Requirements:](#requirements)
   - [Installation](#installation)
   - [Putting it in your `$PATH`](#putting-it-in-your-path)
-    - [Linux (Simplest Option)](#linux-simplest-option)
-    - [virtualenv with pip](#virtualenv-with-pip)
+    - [Linux](#linux)
+      - [Binary](#binary)
+      - [User-Level Python Requirements](#user-level-python-requirements)
+    - [Virtualenv with pip](#virtualenv-with-pip)
   - [Run](#run)
     - [Example](#example)
     - [kubectl to list all of your container images](#kubectl-to-list-all-of-your-container-images)
@@ -121,13 +123,29 @@ images:  # required
 - For local installation/use of the raw script, I use a local virtual environment to isolate dependencies:
 
 ```bash
-git clone https://github.com/DaemonDude23/container-image-replicator.git -b v0.9.0
+git clone https://github.com/DaemonDude23/container-image-replicator.git -b v0.10.0
 cd container-image-replicator
 ```
 
 ## Putting it in your `$PATH`
 
-### Linux (Simplest Option)
+Single-file executibles which contain all dependencies (similar to a Go binary) are available for Linux, Windows, and MacOS. I've only really tested the Linux one. If there's a problem with the others, open an issue.
+
+
+### Linux
+
+#### Binary
+
+Install:
+   ```bash
+   wget https://github.com/DaemonDude23/container-image-repliactor/releases/download/v0.10.0/container-image-repliactor.bin
+   mv container-image-replicator.bin container-image-replicator
+   sudo install container-image-replicator /usr/local/bin
+   ```
+
+Now it'll be available in your `$PATH`.
+
+#### User-Level Python Requirements
 
 1. Create symlink:
 ```bash
@@ -139,11 +157,11 @@ sudo ln -s /absolute/path/to/src/container-image-replicator.py /usr/local/bin/co
 pip3 install -U -r /path/to/src/requirements.txt
 ```
 
-### virtualenv with pip
+### Virtualenv with pip
 
 ```bash
 # assuming virtualenv is already installed...
-virtualenv --python=python3.11 ./venv/
+virtualenv --python=python3.11.4 ./venv/
 source ./venv/bin/activate
 ./venv/bin/python -m pip install --upgrade pip
 pip3 install -U -r ./src/requirements.txt
@@ -155,7 +173,7 @@ pip3 install -U -r ./src/requirements.txt
 
 ```bash
 # this file doesn't exist in git since it contains my account IDs, but just point it to ./tests/yamls/test1.yaml after updating it
-./src/main.py ./tests/yamls/test2.yaml
+./src/container-image-replicator.py ./tests/yamls/test2.yaml
 ```
 
 ![output-example](docs/images/output-example.png)
@@ -181,13 +199,13 @@ kubectl get pods --all-namespaces \
 ## `mypy` for type hinting
 
 ```bash
-mypy ./src/main.py --check-untyped-defs
+mypy ./src/container-image-replicator.py --check-untyped-defs
 ```
 
 ## Code Validation
 
 ```bash
-mypy --install-types --non-interactive --ignore-missing-imports src/main.py
+mypy --install-types --non-interactive --ignore-missing-imports src/container-image-replicator.py
 ```
 
 ## Miscellaneous Info

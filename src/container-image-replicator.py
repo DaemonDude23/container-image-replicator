@@ -5,9 +5,13 @@ import re
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import wait
 from pathlib import Path
+from sys import exit
 from sys import stdout
 from time import sleep
 from typing import Any
+from typing import Dict
+from typing import List
+from typing import LiteralString
 from typing import Tuple
 
 import coloredlogs
@@ -15,18 +19,28 @@ import docker
 import verboselogs
 import yaml
 
-
+# mypy: disable-error-code = attr-defined
 verboselogs.install()
 logger = logging.getLogger(__name__)
 
 
 def init_docker() -> Any | Any:
-    docker_client = docker.from_env()
-    docker_api = docker.APIClient()
+    """initialize docker connection
+
+    Returns:
+        Any | Any: client and API objects
+    """
+    docker_client: object = docker.from_env()
+    docker_api: object = docker.APIClient()
     return docker_client, docker_api
 
 
 def init_arg_parser() -> Any:
+    """parses CLI args
+
+    Returns:
+        Any: parsed arguments object
+    """
     try:
         parser = argparse.ArgumentParser(
             description="description: make copies of container images from one registry to another",
@@ -37,7 +51,7 @@ def init_arg_parser() -> Any:
         args_optional = parser.add_argument_group("optional")
         args_required = parser.add_argument_group("required")
 
-        args_optional.add_argument("--version", "-v", action="version", version="v0.9.0")
+        args_optional.add_argument("--version", "-v", action="version", version="v0.10.0")
 
         args_optional.add_argument(
             "--max-workers",
@@ -66,6 +80,7 @@ def init_arg_parser() -> Any:
         )
 
         args_optional.add_argument(
+            "--no-color",
             "--no-colors",
             action="store_true",
             default=False,
@@ -78,43 +93,70 @@ def init_arg_parser() -> Any:
         arguments = parser.parse_args()
         return arguments
     except argparse.ArgumentError:
-        print("failed to parse arguments")
+        logging.fatal("failed to parse arguments")
         exit(1)
 
 
-# def parse_image_list_yaml(image_list: Dict[LiteralString, Any]) -> bool:
-def parse_image_list_yaml(image_list) -> bool:
+def parse_image_list_build(image: Dict[LiteralString, Any]) -> None:
+    try:
+        isinstance(image["build"], dict)
+        # TODO more here
+    except KeyError as e:
+        logger.critical(f"syntax error in list file provided: {e}")
+        exit(1)
+
+
+def parse_image_list_replicate(image: Dict[LiteralString, Any]) -> None:
+    try:
+        isinstance(image["source"]["repository"], str)
+        isinstance(image["source"]["tag"], str)
+        try:
+            isinstance(image["destination"]["tag"], str | int | float)
+        except KeyError:
+            logger.debug("no destination tag provided - using source tag as a fallback")
+    except KeyError as e:
+        logger.critical(f"syntax error in list file provided: {e}")
+        exit(1)
+
+
+def parse_image_list_yaml(image_list: Dict[LiteralString, Any]) -> tuple[list[Any], list[Any]]:
     """searches for each element in the list for all expected keys/values
 
     Args:
-        image_list (str): list of images from input YAML
+        image_list (Dict[LiteralString, Any]): list of images from input YAML
 
     Returns:
-        bool: True
+        bool: True if the whole file parsed as expected
     """
+    build_list = list()
+    replicate_list = list()
     try:
         for image in image_list["images"]:
-            str(image["source"]["repository"])
-            str(image["source"]["tag"])
-            str(image["destination"]["repository"])
             try:
-                str(image["destination"]["tag"])
+                if isinstance(image["build"], dict):
+                    parse_image_list_build(image)
+                    build_list.append(image)
             except KeyError:
-                logger.debug("no destination tag provided - using source tag as a fallback")
-                str(image["source"]["tag"])
-    except KeyError:
-        logger.critical("syntax error in list file provided")
+                pass
+            try:
+                if isinstance(image["source"], dict):
+                    parse_image_list_replicate(image)
+                    replicate_list.append(image)
+            except KeyError:
+                pass
+    except KeyError as e:
+        logger.critical(f"syntax error in list file provided: {e}")
         exit(1)
     logger.success("input file successfully validated")
-    return True
+    return build_list, replicate_list
 
 
-def pull_image(repository: str, tag: str) -> bool:
+def pull_image(repository: LiteralString, tag: LiteralString) -> bool:
     """performs a `docker pull`
 
     Args:
-        repository (str): URI of repository
-        tag (str): image tag
+        repository (LiteralString): URI of repository
+        tag (LiteralString): image tag
 
     Returns:
         bool: success or failure
@@ -129,14 +171,12 @@ def pull_image(repository: str, tag: str) -> bool:
         return False
 
 
-def push_image(repository: str, tag: str) -> bool:
-    """issues with not handling errors correctly:
-        https://github.com/docker/docker-py/issues/1772
-        https://github.com/docker/docker-py/issues/2226
+def push_image(repository: LiteralString, tag: LiteralString) -> bool:
+    """_summary_
 
     Args:
-        repository (str): destination repository FQDN
-        tag (str): destination tag
+        repository (LiteralString): destination repository FQDN
+        tag (LiteralString): destination tag
 
     Returns:
         bool: success or failure
@@ -144,6 +184,7 @@ def push_image(repository: str, tag: str) -> bool:
     try:
         logger.info(f"{repository}:{tag} - pushing image")
         docker_client.images.push(repository, tag=tag)
+        logger.success(f"{repository}:{tag} - imaged pushed successfully")
         return True
     except docker.errors.APIError as e:
         logger.error(f"{repository}:{tag} - failed to push image")
@@ -151,40 +192,51 @@ def push_image(repository: str, tag: str) -> bool:
 
 
 def verify_local_image(
-    docker_api: str,
-    source_endpoint: str,
-    source_repository: str,
-    source_tag: str,
-    destination_repository: str,
-    destination_tag: str,
-    final_sha256: str,
+    docker_api: Any,
+    source_endpoint: LiteralString,
+    source_repository: LiteralString,
+    source_tag: LiteralString,
+    destination_repository: LiteralString,
+    destination_tag: LiteralString,
+    final_sha256: LiteralString,
 ) -> bool:
     """checks for the image locally, pulls if it isn't, and re-tags it
 
     Args:
-        docker_api (str): API object
-        source_endpoint (str): source endpoint to look for (repository+tag)
-        source_repository (str): source repository to look for
-        source_tag (str): source tag to look for
-        destination_repository (str): destination repository for re-tagging
-        destination_tag (str): destination tag tag for re-tagging
-        final_sha256 (str): sha256 to look for
+        docker_api (Any): API object
+        source_endpoint (LiteralString): source endpoint to look for (repository+tag)
+        source_repository (LiteralString): source repository to look for
+        source_tag (LiteralString): source tag to look for
+        destination_repository (LiteralString): destination repository for re-tagging
+        destination_tag (LiteralString): destination tag tag for re-tagging
+        final_sha256 (LiteralString): sha256 to look for
 
     Returns:
-        bool: success or failure
+        bool: True if local image tag is found
     """
+    image_match = list()
     try:
         # append sha256 if needed
         if final_sha256 != "":
             source_endpoint_and_sha256: str = str(f"{source_endpoint}@{final_sha256}")
-            docker_client.images.list(filters={"reference": f"{source_endpoint_and_sha256}"})
-            logger.info(f"{source_endpoint_and_sha256} - source image exists locally")
+            image_match = docker_client.images.list(filters={"reference": f"{source_endpoint_and_sha256}"})
+            if len(image_match) > 0:
+                logger.info(f"{source_endpoint_and_sha256} - source image exists locally")
+            else:
+                logger.warning(f"{source_endpoint_and_sha256} - image not found locally")
+                pull_image(source_repository, source_tag)
+                return False
         else:
-            docker_client.images.list(filters={"reference": f"{source_endpoint}"})
-            logger.info(f"{source_endpoint} - source image exists locally")
+            image_match = docker_client.images.list(filters={"reference": f"{source_endpoint}"})
+            if len(image_match) > 0:
+                logger.info(f"{source_endpoint} - source image exists locally")
+            else:
+                logger.warning(f"{source_endpoint} - image not found locally")
+                pull_image(source_repository, source_tag)
+                return False
 
         # replace docker.io as its implicit and not returned by the API when doing lookups
-        docker_api.tag(source_endpoint, destination_repository, destination_tag)  # type: ignore
+        docker_api.tag(source_endpoint, destination_repository, destination_tag)
         return True
     except docker.errors.ImageNotFound as e:
         logger.warning(f"{source_endpoint} - image not found locally")
@@ -193,14 +245,15 @@ def verify_local_image(
         return False
 
 
-def verify_destination_image(docker_client: Any, uri: str) -> Tuple[str, int]:
+def verify_destination_image(docker_client: Any, uri: LiteralString) -> Tuple[str, int]:
     """verify the image exists in the destination
 
     Args:
-        uri (str): container image:tag
+        docker_client (Any): docker client object
+        uri (LiteralString): container image:tag
 
     Returns:
-        bool: True if destination image already exists
+        Tuple[str, int]: status in the form of text (potentially including error), and error code
     """
     try:
         docker_client.images.get_registry_data(uri)
@@ -212,11 +265,11 @@ def verify_destination_image(docker_client: Any, uri: str) -> Tuple[str, int]:
         return f"{e.explanation}", int(e.status_code)
 
 
-def valid_sha256(sha256_hash: str) -> bool:
+def valid_sha256(sha256_hash: LiteralString) -> bool:
     """validates sha256 string
 
     Args:
-        sha256_hash (str): string containing sha256 for image
+        sha256_hash (LiteralString): string containing sha256 for image
 
     Returns:
         bool: True if it is a valid sha256 string
@@ -230,13 +283,13 @@ def valid_sha256(sha256_hash: str) -> bool:
 def check_remote(
     arguments: Any,
     docker_api: Any,
-    source_endpoint: str,
-    source_repository: str,
-    source_tag: str,
-    destination_endpoint: str,
-    destination_repository: str,
-    destination_tag: str,
-    final_sha256: str,
+    source_endpoint: LiteralString,
+    source_repository: LiteralString,
+    source_tag: LiteralString,
+    destination_endpoint: LiteralString,
+    destination_repository: LiteralString,
+    destination_tag: LiteralString,
+    final_sha256: LiteralString,
     force_pull: bool,
     force_push: bool,
 ) -> bool:
@@ -245,13 +298,13 @@ def check_remote(
     Args:
         arguments (Any): cli arguments
         docker_api (Any): api object
-        source_endpoint (str): source endpoint to look for (repository+tag)
-        source_repository (str): source repository to look for
-        source_tag (str): source tag to look for
-        destination_endpoint (str): full endpoint URI including tag
-        destination_repository (str): destination repository for re-tagging
-        destination_tag (str): destination tag tag for re-tagging
-        final_sha256 (str): sha256 to look for
+        source_endpoint (LiteralString): source endpoint to look for (repository+tag)
+        source_repository (LiteralString): source repository to look for
+        source_tag (LiteralString): source tag to look for
+        destination_endpoint (LiteralString): full endpoint URI including tag
+        destination_repository (LiteralString): destination repository for re-tagging
+        destination_tag (LiteralString): destination tag tag for re-tagging
+        final_sha256 (LiteralString): sha256 to look for
         force_pull (bool): force pull, used for immutable tags
         force_push (bool): force push, used for immutable tags
     """
@@ -259,13 +312,11 @@ def check_remote(
         pull_image(source_repository, source_tag)
     if arguments.force_pull_push or force_push:
         push_image(destination_repository, destination_tag)
-        sleep(1)
 
     verify_destination, status_code = verify_destination_image(docker_client, destination_endpoint)
     if verify_destination == "exists":
         logger.info(f"{destination_endpoint} - destination image exists in registry")
-        # image_already_pushed = True
-    elif (verify_destination == "does not exist") or (status_code == 404):
+    elif verify_destination == "does not exist" or status_code == 404:
         logging.warning(f"{destination_endpoint} - destination image not found in registry")
         # see if image exists locally and pull from the source registry if it doesn't
         verify_local_image(
@@ -278,20 +329,25 @@ def check_remote(
     return True
 
 
-def actions(arguments: Any, docker_api: Any, image_list: Any) -> bool:
+def build(arguments: Any, docker_api: Any, image_list: list[dict[str, Any]]) -> bool:
+    logger.success("Mock build success")
+    return True
+
+
+def replicate(arguments: Any, docker_api: Any, image_list: list[dict[str, Any]]) -> bool:
     """performs bulk of logic with replicating images
 
     Args:
+        arguments (Any): CLI arguments
         docker_api (Any): client object
-        image_list (dict): list of images to parse to perform pull/push
-        args (Any): CLI arguments
+        image_list (Dict[LiteralString, Any]): list of images to parse to perform pull/push
 
     Returns:
-        bool: True if no show-stopping exceptions
+        bool: _description_
     """
     logger.info(f"preparing threads. Maximum threads: {arguments.max_workers}")
     thread_pool = ThreadPoolExecutor(max_workers=arguments.max_workers)
-    for image in list(image_list["images"]):
+    for image in list(image_list):
         # remove docker.io registry prefix as its implicit and not returned by the API when doing lookups
         source_repository: str = re.sub(r"^docker.io/", "", str(image["source"]["repository"]))
         source_tag: str = str(image["source"]["tag"])
@@ -315,7 +371,7 @@ def actions(arguments: Any, docker_api: Any, image_list: Any) -> bool:
             logger.debug("no destination tag provided - using source tag as a fallback")
             destination_tag = str(image["source"]["tag"])
 
-        # use []source.sha256 if its valid
+        # use images.[]source.sha256 if its valid
         final_sha256: str = ""
         try:
             source_sha256: str = str(image["source"]["sha256"])
@@ -354,12 +410,11 @@ def actions(arguments: Any, docker_api: Any, image_list: Any) -> bool:
     return True
 
 
-def main(docker_api: Any) -> None:
+def main(docker_api: object) -> None:
     """main
 
     Args:
-        docker_client (Any): client object
-        docker_api (Any): api object
+        docker_api (object): api object
     """
     arguments = init_arg_parser()
 
@@ -370,11 +425,11 @@ def main(docker_api: Any) -> None:
     elif arguments.log_level == "DEBUG":
         log_level = "DEBUG"
     else:
-        print("failed to determine the specified value for --log-level")
+        logging.error("failed to determine the specified value for --log-level")
 
     if arguments.no_colors:
-        logger.basicConfig(
-            level=eval(f"logger.{log_level}"),
+        logging.basicConfig(
+            level=eval(f"logging.{log_level}"),
             datefmt="%Y-%m-%dT%H:%M:%S%z",
             stream=stdout,
             format="%(asctime)s %(levelname)s %(message)s",
@@ -383,12 +438,23 @@ def main(docker_api: Any) -> None:
         coloredlogs.install(level=log_level, fmt="%(asctime)s %(levelname)s %(message)s", datefmt="%Y-%m-%dT%H:%M:%S%z")
 
     try:
-        # image_list: Dict[LiteralString, List[Any]] = yaml.safe_load(Path(arguments.input_file).read_text())
         image_list = yaml.safe_load(Path(arguments.input_file).read_text())
-        parse_image_list_yaml(image_list)
-        actions(arguments, docker_api, image_list)
+        build_list, replicate_list = parse_image_list_yaml(image_list)
+
+        # store the lengths as we will do multiple int comparisons
+        build_list_length = len(build_list)
+        replicate_list_length = len(replicate_list)
+
+        # is there anything to do?
+        if (build_list_length > 0) or (replicate_list_length > 0):
+            if build_list_length > 0:
+                build(arguments, docker_api, build_list)
+            if replicate_list_length > 0:
+                replicate(arguments, docker_api, replicate_list)
+        else:
+            logger.warning("no actions found that need taking... strange")
     except FileNotFoundError:
-        logger.critical(f"input file not found. I cannot continue: {Path(arguments.input_file)}")
+        logger.critical(f"input file not found. Cannot continue: {Path(arguments.input_file)}")
     except yaml.parser.ParserError as e:
         logger.critical(f"failed to parse input file: {Path(arguments.input_file)} with error: {e}")
 

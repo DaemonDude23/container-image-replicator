@@ -9,7 +9,7 @@
       "name": "Default Test",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}/src/main.py",
+      "program": "${workspaceFolder}/src/container-image-replicator.py",
       "console": "integratedTerminal",
       "justMyCode": true
     },
@@ -18,7 +18,7 @@
       "name": "Log Level: DEBUG",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}/src/main.py",
+      "program": "${workspaceFolder}/src/container-image-replicator.py",
       "console": "integratedTerminal",
       "justMyCode": true
     },
@@ -27,7 +27,7 @@
       "name": "Log Level: ERROR",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}/src/main.py",
+      "program": "${workspaceFolder}/src/container-image-replicator.py",
       "console": "integratedTerminal",
       "justMyCode": true
     },
@@ -36,7 +36,16 @@
       "name": "Hidden Test",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}/src/main.py",
+      "program": "${workspaceFolder}/src/container-image-replicator.py",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "args": ["--max-workers=2", "--no-colors", "./tests/yamls/test2.yaml"],
+      "name": "Hidden Test (--no-colors)",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/container-image-replicator.py",
       "console": "integratedTerminal",
       "justMyCode": true
     },
@@ -45,7 +54,7 @@
       "name": "Hidden Test (no colors)",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}/src/main.py",
+      "program": "${workspaceFolder}/src/container-image-replicator.py",
       "console": "integratedTerminal",
       "justMyCode": true
     },
@@ -54,7 +63,7 @@
       "name": "--version",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}/src/main.py",
+      "program": "${workspaceFolder}/src/container-image-replicator.py",
       "console": "integratedTerminal",
       "justMyCode": true
     },
@@ -63,7 +72,7 @@
       "name": "--help",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}/src/main.py",
+      "program": "${workspaceFolder}/src/container-image-replicator.py",
       "console": "integratedTerminal",
       "justMyCode": true
     }

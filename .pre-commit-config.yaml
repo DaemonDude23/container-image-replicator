@@ -31,11 +31,16 @@ repos:
       - id: check-ast
     repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
+  - repo: https://github.com/netromdk/vermin
+    rev: v1.5.2
+    hooks:
+      - id: vermin
+        args: ['-t=3.11-', '--violations']
   - hooks:
       - args: [--application-directories, '.:src', --py36-plus]
         id: reorder-python-imports
     repo: https://github.com/asottile/reorder_python_imports
-    rev: v3.9.0
+    rev: v3.10.0
   - hooks:
       - args:
           - '--line-length'
@@ -43,14 +48,15 @@ repos:
         id: black
         language_version: python3.11
     repo: https://github.com/psf/black
-    rev: 23.3.0
-  # - hooks:
-  #     - args: ["--strict", "--non-interactive", "--install-types", "--ignore-missing-imports"]
-  #       id: mypy
-  #   repo: https://github.com/pre-commit/mirrors-mypy
-  #   rev: v1.3.0
-  - repo: https://github.com/netromdk/vermin
-    rev: v1.5.1
-    hooks:
-      - id: vermin
-        args: ['-t=3.6-', '--violations']
+    rev: 23.7.0
+  - hooks:
+      - args:
+        - --check-untyped-defs
+        - --ignore-missing-imports
+        - --install-types
+        - --non-interactive
+        - --strict
+        # - --implicit-reexport
+        id: mypy
+    repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.4.1
