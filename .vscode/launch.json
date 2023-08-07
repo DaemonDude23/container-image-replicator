@@ -6,6 +6,7 @@
   "configurations": [
     {
       "args": ["--max-workers=3", "./tests/yamls/test.yaml"],
+      "cwd": "${workspaceFolder}/src/",
       "name": "Default Test",
       "type": "python",
       "request": "launch",
@@ -15,6 +16,7 @@
     },
     {
       "args": ["--log-level=DEBUG", "./tests/yamls/test2.yaml"],
+      "cwd": "${workspaceFolder}/src/",
       "name": "Log Level: DEBUG",
       "type": "python",
       "request": "launch",
@@ -24,6 +26,7 @@
     },
     {
       "args": ["--max-workers=1", "--log-level=ERROR", "./tests/yamls/test2.yaml"],
+      "cwd": "${workspaceFolder}/src/",
       "name": "Log Level: ERROR",
       "type": "python",
       "request": "launch",
@@ -32,7 +35,8 @@
       "justMyCode": true
     },
     {
-      "args": ["--max-workers=1", "./tests/yamls/test2.yaml"],
+      "args": ["--max-workers=1", "../tests/yamls/test2.yaml"],
+      "cwd": "${workspaceFolder}/src/",
       "name": "Hidden Test",
       "type": "python",
       "request": "launch",
@@ -42,6 +46,7 @@
     },
     {
       "args": ["--max-workers=2", "--no-colors", "./tests/yamls/test2.yaml"],
+      "cwd": "${workspaceFolder}/src/",
       "name": "Hidden Test (--no-colors)",
       "type": "python",
       "request": "launch",
@@ -51,6 +56,7 @@
     },
     {
       "args": ["--max-workers=1", "--no-colors", "./tests/yamls/test2.yaml"],
+      "cwd": "${workspaceFolder}/src/",
       "name": "Hidden Test (no colors)",
       "type": "python",
       "request": "launch",
@@ -60,6 +66,7 @@
     },
     {
       "args": ["--version"],
+      "cwd": "${workspaceFolder}/src/",
       "name": "--version",
       "type": "python",
       "request": "launch",
@@ -69,6 +76,7 @@
     },
     {
       "args": ["--help"],
+      "cwd": "${workspaceFolder}/src/",
       "name": "--help",
       "type": "python",
       "request": "launch",

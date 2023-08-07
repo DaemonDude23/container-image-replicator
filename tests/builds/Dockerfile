@@ -1,1 +1,2 @@
-FROM scratch
+FROM ubuntu:latest
+RUN echo "WOOO"

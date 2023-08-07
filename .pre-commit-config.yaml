@@ -37,16 +37,17 @@ repos:
       - id: vermin
         args: ['-t=3.11-', '--violations']
   - hooks:
-      - args: [--application-directories, '.:src', --py36-plus]
+      - args: [--application-directories, '.:src', --py311-plus]
         id: reorder-python-imports
     repo: https://github.com/asottile/reorder_python_imports
     rev: v3.10.0
   - hooks:
       - args:
-          - '--line-length'
-          - '140'
+          - '--line-length=140'
+          - '--include=''\.pyi?$'''
+          - '--exclude=\.git|\.__pycache__|\.hg|\.mypy_cache|\.tox|\.venv|_build|buck-out|build|dist'
         id: black
-        language_version: python3.11
+        language_version: python3.11.4
     repo: https://github.com/psf/black
     rev: 23.7.0
   - hooks:
@@ -56,7 +57,6 @@ repos:
         - --install-types
         - --non-interactive
         - --strict
-        # - --implicit-reexport
         id: mypy
     repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.4.1

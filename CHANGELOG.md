@@ -22,9 +22,10 @@
 
 - pre-commit
   - config updates and enabled `mypy`.
-- Added more typing. Bumped minimum Python version to 3.11 due to use of the newer typing mechanisms.
 - Corrected some docstrings.
+- Added more typing. Bumped minimum Python version to 3.11 due to use of the newer typing mechanisms.
 - `PyYAML` package updated.
+- Split [`requirements.txt`](src/requirements.txt) into the latest and greatest, or use [`requirements-macos.txt`](src/requirements-mac.txt) if you have a [bug](https://github.com/docker/docker-py/issues/3113) with the `requests` library.
 
 # [v0.9.0](https://github.com/DaemonDude23/container-image-replicator/releases/tag/v0.9.0) - June 3 2023
 
