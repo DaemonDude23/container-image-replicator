@@ -5,7 +5,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "args": ["--max-workers=3", "./tests/yamls/test.yaml"],
+      "args": ["--max-workers=3", "../tests/yamls/test.yaml"],
       "cwd": "${workspaceFolder}/src/",
       "name": "Default Test",
       "type": "python",
@@ -15,7 +15,7 @@
       "justMyCode": true
     },
     {
-      "args": ["--log-level=DEBUG", "./tests/yamls/test2.yaml"],
+      "args": ["--log-level=DEBUG", "../tests/yamls/test2.yaml"],
       "cwd": "${workspaceFolder}/src/",
       "name": "Log Level: DEBUG",
       "type": "python",
@@ -25,7 +25,7 @@
       "justMyCode": true
     },
     {
-      "args": ["--max-workers=1", "--log-level=ERROR", "./tests/yamls/test2.yaml"],
+      "args": ["--max-workers=1", "--log-level=ERROR", "../tests/yamls/test2.yaml"],
       "cwd": "${workspaceFolder}/src/",
       "name": "Log Level: ERROR",
       "type": "python",
@@ -45,9 +45,9 @@
       "justMyCode": true
     },
     {
-      "args": ["--max-workers=2", "--no-colors", "./tests/yamls/test2.yaml"],
+      "args": ["--max-workers=2", "--no-color", "../tests/yamls/test2.yaml"],
       "cwd": "${workspaceFolder}/src/",
-      "name": "Hidden Test (--no-colors)",
+      "name": "Hidden Test (--no-color)",
       "type": "python",
       "request": "launch",
       "program": "${workspaceFolder}/src/container-image-replicator.py",
@@ -55,9 +55,9 @@
       "justMyCode": true
     },
     {
-      "args": ["--max-workers=1", "--no-colors", "./tests/yamls/test2.yaml"],
+      "args": ["--max-workers=1", "--no-colors", "../tests/yamls/test2.yaml"],
       "cwd": "${workspaceFolder}/src/",
-      "name": "Hidden Test (no colors)",
+      "name": "Hidden Test (--no colors)",
       "type": "python",
       "request": "launch",
       "program": "${workspaceFolder}/src/container-image-replicator.py",

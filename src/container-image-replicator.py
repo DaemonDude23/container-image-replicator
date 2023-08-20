@@ -1,18 +1,12 @@
 #!/usr/bin/env python3.11
 import argparse
 import logging
-import re
-from concurrent.futures import ThreadPoolExecutor
-from concurrent.futures import wait
-from json import dumps
 from pathlib import Path
 from sys import exit
 from sys import stdout
 from typing import Any
 from typing import Dict
-from typing import List
 from typing import LiteralString
-from typing import Tuple
 
 import coloredlogs
 import docker
@@ -165,14 +159,14 @@ def main(docker_api: object) -> None:
         image_list = yaml.safe_load(Path(arguments.input_file).read_text())
         build_list, replicate_list = parse_image_list_yaml(image_list)
 
-        # store the lengths as we will do multiple int comparisons
+        # store the lengths of the two main as we will do multiple int comparisons
         build_list_length = len(build_list)
         replicate_list_length = len(replicate_list)
 
         # is there anything to do?
         if (build_list_length > 0) or (replicate_list_length > 0):
             if build_list_length > 0:
-                construct_build(logger, arguments, docker_api, build_list)
+                construct_build(logger, arguments, docker_client, build_list)
             if replicate_list_length > 0:
                 replicate(logger, arguments, docker_api, docker_client, replicate_list)
         else:
