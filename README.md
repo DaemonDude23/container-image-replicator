@@ -4,12 +4,17 @@
 - [Usage](#usage)
   - [CLI](#cli)
   - [Config File](#config-file)
+    - [Replication](#replication)
+    - [Building](#building)
 - [Configuration](#configuration)
   - [Requirements:](#requirements)
   - [Installation](#installation)
   - [Putting it in your `$PATH`](#putting-it-in-your-path)
-    - [Linux (Simplest Option)](#linux-simplest-option)
-    - [virtualenv with pip](#virtualenv-with-pip)
+    - [Linux](#linux)
+      - [Binary](#binary)
+      - [User-Level Python Requirements](#user-level-python-requirements)
+    - [Virtualenv with pip](#virtualenv-with-pip)
+  - [MacOS](#macos)
   - [Run](#run)
     - [Example](#example)
     - [kubectl to list all of your container images](#kubectl-to-list-all-of-your-container-images)
@@ -73,7 +78,7 @@ See [References](#references).
 ## CLI
 
 ```
-usage: container-image-replicator [-h] [--version] [--max-workers MAX_WORKERS] [--log-level LOG_LEVEL] [--force-pull-push] [--no-colors] input_file
+usage: container-image-replicator [-h] [--version] [--max-workers MAX_WORKERS] [--log-level LOG_LEVEL] [--force-pull-push] [--no-color] input_file
 
 description: make copies of container images from one registry to another
 
@@ -86,14 +91,21 @@ optional:
                         maximum number of worker threads to execute at any one time. One thread per container image (default: 2)
   --log-level LOG_LEVEL
                         set logging level (INFO, ERROR, DEBUG) (default: INFO)
-  --force-pull-push     don't check destination or local image cache and pull and push. Useful for mutable tags. Be careful, as this can hit rate limits quickly! (default: False)
-  --no-colors           disable color output from the logger (default: False)
+  --force-pull-push     don't check destination or local image cache and pull and push. Useful for mutable tags. Be careful, as this
+                        can hit rate limits quickly! (default: False)
+  --no-color, --no-colors
+                        disable color output from the logger (default: False)
 
 required:
   input_file            path to YAML file containing registry information
 ```
 
 ## Config File
+
+You can combine replication configs with building configs. First it will perform builds, then it will go through replications.
+The key difference is the source key `source`, which is used for replicating, and `build`, which is used for performing `docker build`.
+
+### Replication
 
 This is a description of of the fields available in the config file:
 ```yaml
@@ -106,6 +118,23 @@ images:  # required
       repository: docker.io/nginx  # required
       tag: 1.23.2-alpine  # required - image tag from source repository
       sha256: fcba10206c0e29bc2c6c5ede2d64817c113de5bfaecf908b3b7b158a89144162  # optional
+```
+
+### Building
+
+This is a description of of the fields available in the config file:
+```yaml
+---
+images:
+  - destination:
+      repository: 000000000000.dkr.ecr.us-east-1.amazonaws.com/scratch
+    build:  # optional
+      build_args:  # optional
+        AWS_ACCOUNT_ID: 000000000000  # optional
+      build_folder: ../tests/builds/  # required
+      dockerfile: ../tests/builds/Dockerfile  # optional
+      tags:  # required
+        - v1.0.0
 ```
 
 # Configuration
@@ -121,13 +150,28 @@ images:  # required
 - For local installation/use of the raw script, I use a local virtual environment to isolate dependencies:
 
 ```bash
-git clone https://github.com/DaemonDude23/container-image-replicator.git -b v0.9.0
+git clone https://github.com/DaemonDude23/container-image-replicator.git -b v0.10.0
 cd container-image-replicator
 ```
 
 ## Putting it in your `$PATH`
 
-### Linux (Simplest Option)
+Single-file executibles which contain all dependencies (similar to a Go binary) are available for Linux, Windows, and MacOS. I've only really tested the Linux one. If there's a problem with the others, open an issue.
+
+### Linux
+
+#### Binary
+
+Install:
+   ```bash
+   wget https://github.com/DaemonDude23/container-image-repliactor/releases/download/v0.10.0/container-image-repliactor.bin
+   mv container-image-replicator.bin container-image-replicator
+   sudo install container-image-replicator /usr/local/bin
+   ```
+
+Now it'll be available in your `$PATH`.
+
+#### User-Level Python Requirements
 
 1. Create symlink:
 ```bash
@@ -139,14 +183,23 @@ sudo ln -s /absolute/path/to/src/container-image-replicator.py /usr/local/bin/co
 pip3 install -U -r /path/to/src/requirements.txt
 ```
 
-### virtualenv with pip
+### Virtualenv with pip
 
 ```bash
 # assuming virtualenv is already installed...
-virtualenv --python=python3.11 ./venv/
+virtualenv --python=python3.11.5 ./venv/
 source ./venv/bin/activate
 ./venv/bin/python -m pip install --upgrade pip
 pip3 install -U -r ./src/requirements.txt
+```
+
+## MacOS
+
+Do the same as above, but use the mac-specific `requirements.txt` file:
+
+```bash
+# latest and greatest dependency versions
+pip3 install -U -r /path/to/src/requirements-mac.txt
 ```
 
 ## Run
@@ -155,7 +208,7 @@ pip3 install -U -r ./src/requirements.txt
 
 ```bash
 # this file doesn't exist in git since it contains my account IDs, but just point it to ./tests/yamls/test1.yaml after updating it
-./src/main.py ./tests/yamls/test2.yaml
+./src/container-image-replicator.py ./tests/yamls/test2.yaml
 ```
 
 ![output-example](docs/images/output-example.png)
@@ -181,13 +234,13 @@ kubectl get pods --all-namespaces \
 ## `mypy` for type hinting
 
 ```bash
-mypy ./src/main.py --check-untyped-defs
+mypy ./src/container-image-replicator.py --check-untyped-defs
 ```
 
 ## Code Validation
 
 ```bash
-mypy --install-types --non-interactive --ignore-missing-imports src/main.py
+mypy --install-types --non-interactive --ignore-missing-imports src/container-image-replicator.py
 ```
 
 ## Miscellaneous Info
@@ -204,8 +257,6 @@ Any help with these things would be appreciated.
 
 - I'm considering adding support for
   - [PodMan](https://github.com/containers/podman-py) to push images. This would allow a non-`root` user to run this which is always good.
-  - Building and pushing images, not _just_ pulling them from somewhere else.
-    - This one is probably pretty easy. `-f` equivalent field in the config file for the Dockerfile, the build context, build-args, etc.
   - Scan **Kubernetes** and generate a file containing all images, allowing the user to customize it further for their specific destination repositories.
     - Equivalent of `kubectl get` for Pods with `annotations` that are watched by CIR and periodically
     - Can be run inside of Kubernetes or outside of it.

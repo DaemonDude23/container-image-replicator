@@ -5,65 +5,82 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "args": ["--max-workers=3", "./tests/yamls/test.yaml"],
+      "args": ["--max-workers=3", "../tests/yamls/test.yaml"],
+      "cwd": "${workspaceFolder}/src/",
       "name": "Default Test",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}/src/main.py",
+      "program": "${workspaceFolder}/src/container-image-replicator.py",
       "console": "integratedTerminal",
       "justMyCode": true
     },
     {
-      "args": ["--log-level=DEBUG", "./tests/yamls/test2.yaml"],
+      "args": ["--log-level=DEBUG", "../tests/yamls/test2.yaml"],
+      "cwd": "${workspaceFolder}/src/",
       "name": "Log Level: DEBUG",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}/src/main.py",
+      "program": "${workspaceFolder}/src/container-image-replicator.py",
       "console": "integratedTerminal",
       "justMyCode": true
     },
     {
-      "args": ["--max-workers=1", "--log-level=ERROR", "./tests/yamls/test2.yaml"],
+      "args": ["--max-workers=1", "--log-level=ERROR", "../tests/yamls/test2.yaml"],
+      "cwd": "${workspaceFolder}/src/",
       "name": "Log Level: ERROR",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}/src/main.py",
+      "program": "${workspaceFolder}/src/container-image-replicator.py",
       "console": "integratedTerminal",
       "justMyCode": true
     },
     {
-      "args": ["--max-workers=1", "./tests/yamls/test2.yaml"],
+      "args": ["--max-workers=1", "../tests/yamls/test2.yaml"],
+      "cwd": "${workspaceFolder}/src/",
       "name": "Hidden Test",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}/src/main.py",
+      "program": "${workspaceFolder}/src/container-image-replicator.py",
       "console": "integratedTerminal",
       "justMyCode": true
     },
     {
-      "args": ["--max-workers=1", "--no-colors", "./tests/yamls/test2.yaml"],
-      "name": "Hidden Test (no colors)",
+      "args": ["--max-workers=2", "--no-color", "../tests/yamls/test2.yaml"],
+      "cwd": "${workspaceFolder}/src/",
+      "name": "Hidden Test (--no-color)",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}/src/main.py",
+      "program": "${workspaceFolder}/src/container-image-replicator.py",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "args": ["--max-workers=1", "--no-colors", "../tests/yamls/test2.yaml"],
+      "cwd": "${workspaceFolder}/src/",
+      "name": "Hidden Test (--no colors)",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/container-image-replicator.py",
       "console": "integratedTerminal",
       "justMyCode": true
     },
     {
       "args": ["--version"],
+      "cwd": "${workspaceFolder}/src/",
       "name": "--version",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}/src/main.py",
+      "program": "${workspaceFolder}/src/container-image-replicator.py",
       "console": "integratedTerminal",
       "justMyCode": true
     },
     {
       "args": ["--help"],
+      "cwd": "${workspaceFolder}/src/",
       "name": "--help",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}/src/main.py",
+      "program": "${workspaceFolder}/src/container-image-replicator.py",
       "console": "integratedTerminal",
       "justMyCode": true
     }
