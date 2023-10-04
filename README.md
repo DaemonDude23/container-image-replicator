@@ -78,7 +78,7 @@ See [References](#references).
 ## CLI
 
 ```
-usage: container-image-replicator [-h] [--version] [--max-workers MAX_WORKERS] [--log-level LOG_LEVEL] [--force-pull-push] [--no-colors] input_file
+usage: container-image-replicator [-h] [--version] [--max-workers MAX_WORKERS] [--log-level LOG_LEVEL] [--force-pull-push] [--no-color] input_file
 
 description: make copies of container images from one registry to another
 
@@ -91,8 +91,10 @@ optional:
                         maximum number of worker threads to execute at any one time. One thread per container image (default: 2)
   --log-level LOG_LEVEL
                         set logging level (INFO, ERROR, DEBUG) (default: INFO)
-  --force-pull-push     don't check destination or local image cache and pull and push. Useful for mutable tags. Be careful, as this can hit rate limits quickly! (default: False)
-  --no-colors           disable color output from the logger (default: False)
+  --force-pull-push     don't check destination or local image cache and pull and push. Useful for mutable tags. Be careful, as this
+                        can hit rate limits quickly! (default: False)
+  --no-color, --no-colors
+                        disable color output from the logger (default: False)
 
 required:
   input_file            path to YAML file containing registry information
