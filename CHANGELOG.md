@@ -2,13 +2,13 @@
 
 ---
 
-# [v0.10.0](https://github.com/DaemonDude23/container-image-replicator/releases/tag/v0.10.0) - August 3 2023
+# [v0.10.0](https://github.com/DaemonDude23/container-image-replicator/releases/tag/v0.10.0) - October 3 2023
 
 **Enhancements**
 
-- Added the ability to **build** and push images, not just replicate. See config syntax examples in [README.md](README.md).
+- Added the ability to **build** _and_ push images, not just replicate them from somewhere to somewhere. See config syntax examples in [README.md](README.md).
 - Switched to **Nuitka**, replacing **PyInstaller** for generating binaries. Let me know if any of the builds (Linux/Windows/MacOS) have issues.
-  - Currently building a Python `3.11.4` image.
+  - Currently building a Python `3.11.5` image.
 
 **Bugfixes**
 
@@ -23,9 +23,9 @@
 - pre-commit
   - config updates and enabled `mypy`.
 - Corrected some docstrings.
-- Added more typing. Bumped minimum Python version to 3.11 due to use of the newer typing mechanisms.
+- Added more typing. Bumped minimum Python version to `3.11` due to use of the newer typing mechanisms.
 - `PyYAML` package updated.
-- Split [`requirements.txt`](src/requirements.txt) into the latest and greatest, or use [`requirements-macos.txt`](src/requirements-mac.txt) if you have a [bug](https://github.com/docker/docker-py/issues/3113) with the `requests` library.
+- Split [`requirements.txt`](src/requirements.txt) into the latest and greatest, or use [`requirements-mac.txt`](src/requirements-mac.txt) if you have a [bug](https://github.com/docker/docker-py/issues/3113) with the `requests` library.
 
 # [v0.9.0](https://github.com/DaemonDude23/container-image-replicator/releases/tag/v0.9.0) - June 3 2023
 

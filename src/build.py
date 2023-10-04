@@ -1,5 +1,4 @@
 import logging
-from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import wait
 from json import dumps

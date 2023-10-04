@@ -1,0 +1,11 @@
+---
+images:
+  - destination:
+      repository: 000000000000.dkr.ecr.us-east-1.amazonaws.com/scratch
+    build:  # optional
+      build_args:  # optional
+        AWS_ACCOUNT_ID: 000000000000  # optional
+      build_folder: ../tests/builds/  # required
+      dockerfile: ../tests/builds/Dockerfile  # optional
+      tags:  # required
+        - v1.0.0

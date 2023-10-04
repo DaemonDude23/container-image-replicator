@@ -4,6 +4,8 @@
 - [Usage](#usage)
   - [CLI](#cli)
   - [Config File](#config-file)
+    - [Replication](#replication)
+    - [Building](#building)
 - [Configuration](#configuration)
   - [Requirements:](#requirements)
   - [Installation](#installation)
@@ -12,6 +14,7 @@
       - [Binary](#binary)
       - [User-Level Python Requirements](#user-level-python-requirements)
     - [Virtualenv with pip](#virtualenv-with-pip)
+  - [MacOS](#macos)
   - [Run](#run)
     - [Example](#example)
     - [kubectl to list all of your container images](#kubectl-to-list-all-of-your-container-images)
@@ -97,6 +100,11 @@ required:
 
 ## Config File
 
+You can combine replication configs with building configs. First it will perform builds, then it will go through replications.
+The key difference is the source key `source`, which is used for replicating, and `build`, which is used for performing `docker build`.
+
+### Replication
+
 This is a description of of the fields available in the config file:
 ```yaml
 ---
@@ -108,6 +116,23 @@ images:  # required
       repository: docker.io/nginx  # required
       tag: 1.23.2-alpine  # required - image tag from source repository
       sha256: fcba10206c0e29bc2c6c5ede2d64817c113de5bfaecf908b3b7b158a89144162  # optional
+```
+
+### Building
+
+This is a description of of the fields available in the config file:
+```yaml
+---
+images:
+  - destination:
+      repository: 000000000000.dkr.ecr.us-east-1.amazonaws.com/scratch
+    build:  # optional
+      build_args:  # optional
+        AWS_ACCOUNT_ID: 000000000000  # optional
+      build_folder: ../tests/builds/  # required
+      dockerfile: ../tests/builds/Dockerfile  # optional
+      tags:  # required
+        - v1.0.0
 ```
 
 # Configuration
@@ -130,7 +155,6 @@ cd container-image-replicator
 ## Putting it in your `$PATH`
 
 Single-file executibles which contain all dependencies (similar to a Go binary) are available for Linux, Windows, and MacOS. I've only really tested the Linux one. If there's a problem with the others, open an issue.
-
 
 ### Linux
 
@@ -161,10 +185,19 @@ pip3 install -U -r /path/to/src/requirements.txt
 
 ```bash
 # assuming virtualenv is already installed...
-virtualenv --python=python3.11.4 ./venv/
+virtualenv --python=python3.11.5 ./venv/
 source ./venv/bin/activate
 ./venv/bin/python -m pip install --upgrade pip
 pip3 install -U -r ./src/requirements.txt
+```
+
+## MacOS
+
+Do the same as above, but use the mac-specific `requirements.txt` file:
+
+```bash
+# latest and greatest dependency versions
+pip3 install -U -r /path/to/src/requirements-mac.txt
 ```
 
 ## Run
@@ -222,8 +255,6 @@ Any help with these things would be appreciated.
 
 - I'm considering adding support for
   - [PodMan](https://github.com/containers/podman-py) to push images. This would allow a non-`root` user to run this which is always good.
-  - Building and pushing images, not _just_ pulling them from somewhere else.
-    - This one is probably pretty easy. `-f` equivalent field in the config file for the Dockerfile, the build context, build-args, etc.
   - Scan **Kubernetes** and generate a file containing all images, allowing the user to customize it further for their specific destination repositories.
     - Equivalent of `kubectl get` for Pods with `annotations` that are watched by CIR and periodically
     - Can be run inside of Kubernetes or outside of it.

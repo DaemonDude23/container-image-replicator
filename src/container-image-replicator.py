@@ -122,7 +122,7 @@ def parse_image_list_yaml(image_list: Dict[LiteralString, Any]) -> tuple[list[An
             except KeyError:
                 pass
     except KeyError as e:
-        logger.critical(f"syntax error in list file provided: {e}")
+        logger.critical(f"syntax error in list file provided:\n{e}")
         exit(1)
     logger.success("input file successfully validated")
     return build_list, replicate_list
@@ -182,6 +182,8 @@ if __name__ == "__main__":
         docker_client, docker_api = init_docker()
         main(docker_api)
         docker_client.close()
+    except docker.errors.DockerException:
+        print("Error: Unable to communicate with docker daemon")
     except KeyboardInterrupt:
         docker_client.close()
         exit(1)
