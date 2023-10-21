@@ -30,13 +30,12 @@ jobs:
         script-name: container-image-replicator.py
         standalone: true
         working-directory: src
-    - name: Rename binary removing the .bin extension from Nuitka's default
-      run: |
-        if [ ${{ runner.os }} == 'Linux' ]; then
-          mv src/build/container-image-replicator.bin src/build/container-image-replicator.linux
-        elif [ ${{ runner.os }} == 'macOS' ]; then
-          mv src/build/container-image-replicator.bin src/build/container-image-replicator.mac
-        fi
+    - name: Rename binary for Linux
+      if: runner.os == 'Linux'
+      run: mv src/build/container-image-replicator.bin src/build/container-image-replicator
+    - name: Rename binary for macOS
+      if: runner.os == 'macOS'
+      run: mv src/build/container-image-replicator.bin src/build/container-image-replicator.mac
     - name: ${{ runner.os }} Release
       uses: softprops/action-gh-release@v1
       with:
@@ -44,6 +43,6 @@ jobs:
         prerelease: true
         fail_on_unmatched_files: false
         files: |
-          src/build/container-image-replicator.exe
           src/build/container-image-replicator
-          src/build/*.container-image-replicator.app/**/*
+          src/build/container-image-replicator.exe
+          src/build/container-image-replicator.mac
