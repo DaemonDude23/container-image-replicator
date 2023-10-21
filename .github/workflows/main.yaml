@@ -32,7 +32,11 @@ jobs:
         working-directory: src
     - name: Rename binary removing the .bin extension from Nuitka's default
       run: |
-        mv src/build/container-image-replicator.bin src/build/container-image-replicator
+        if [ ${{ runner.os }} == 'Linux' ]; then
+          mv src/build/container-image-replicator.bin src/build/container-image-replicator.linux
+        elif [ ${{ runner.os }} == 'macOS' ]; then
+          mv src/build/container-image-replicator.bin src/build/container-image-replicator.mac
+        fi
     - name: ${{ runner.os }} Release
       uses: softprops/action-gh-release@v1
       with:
