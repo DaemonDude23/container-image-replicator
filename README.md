@@ -241,7 +241,6 @@ mypy ./src/ --check-untyped-defs
 ## Code Validation
 
 ```bash
-mypy --install-types
 mypy --install-types --non-interactive --ignore-missing-imports ./src/
 ```
 

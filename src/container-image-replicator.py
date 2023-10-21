@@ -6,11 +6,11 @@ from sys import exit
 from sys import stdout
 from typing import Any
 from typing import Dict
-
 import coloredlogs
 import docker
 import verboselogs
 import yaml
+
 from typing_extensions import LiteralString
 
 from build import construct_build
