@@ -150,7 +150,7 @@ images:
 - For local installation/use of the raw script, I use a local virtual environment to isolate dependencies:
 
 ```bash
-git clone https://github.com/DaemonDude23/container-image-replicator.git -b v0.10.0
+git clone https://github.com/DaemonDude23/container-image-replicator.git -b v0.11.0
 cd container-image-replicator
 ```
 
@@ -164,7 +164,7 @@ Single-file executibles which contain all dependencies (similar to a Go binary) 
 
 Install:
    ```bash
-   wget https://github.com/DaemonDude23/container-image-repliactor/releases/download/v0.10.0/container-image-repliactor.bin
+   wget https://github.com/DaemonDude23/container-image-repliactor/releases/download/v0.11.0/container-image-repliactor.bin
    mv container-image-replicator.bin container-image-replicator
    sudo install container-image-replicator /usr/local/bin
    ```
@@ -185,8 +185,9 @@ pip3 install -U -r /path/to/src/requirements.txt
 
 ### Virtualenv with pip
 
+Assuming virtualenv is already installed...
+
 ```bash
-# assuming virtualenv is already installed...
 virtualenv --python=python3.11.5 ./venv/
 source ./venv/bin/activate
 ./venv/bin/python -m pip install --upgrade pip
@@ -234,18 +235,19 @@ kubectl get pods --all-namespaces \
 ## `mypy` for type hinting
 
 ```bash
-mypy ./src/container-image-replicator.py --check-untyped-defs
+mypy ./src/ --check-untyped-defs
 ```
 
 ## Code Validation
 
 ```bash
-mypy --install-types --non-interactive --ignore-missing-imports src/container-image-replicator.py
+mypy --install-types
+mypy --install-types --non-interactive --ignore-missing-imports ./src/
 ```
 
 ## Miscellaneous Info
 
-If you need a named capture group to capture logs in a semi-structed way, this should work:
+If you need a named capture group to capture logs in a semi-structured way, this should work:
 
 ```
 (?<timestamp>^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}-\d{4})\s(?<level>\w+)\s(?<message>.+)

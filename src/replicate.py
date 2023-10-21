@@ -4,10 +4,10 @@ from concurrent.futures import wait
 from sys import exit
 from typing import Any
 from typing import Dict
-from typing import LiteralString
 from typing import Tuple
 
 import docker
+from typing_extensions import LiteralString
 
 from push import push_image
 

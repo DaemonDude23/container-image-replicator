@@ -7,9 +7,9 @@ from sys import exit
 from typing import Any
 from typing import Dict
 from typing import List
-from typing import LiteralString
 
 import docker
+from typing_extensions import LiteralString
 
 from push import push_image
 

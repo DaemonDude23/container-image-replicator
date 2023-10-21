@@ -1,7 +1,7 @@
 from typing import Any
-from typing import LiteralString
 
 import docker
+from typing_extensions import LiteralString
 
 
 def push_image(logger: Any, docker_client: Any, repository: LiteralString, tag: LiteralString) -> bool:

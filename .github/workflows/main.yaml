@@ -26,8 +26,8 @@ jobs:
       uses: Nuitka/Nuitka-Action@main
       with:
         nuitka-version: main
-        script-name: container-image-replicator.py
         onefile: true
+        standalone: true
         working-directory: src
     - name: Rename binary removing the .bin extension from Nuitka's default
       run: |
