@@ -4,7 +4,6 @@ from concurrent.futures import wait
 from sys import exit
 from typing import Any
 from typing import Dict
-
 from typing import Tuple
 
 import docker
@@ -110,28 +109,28 @@ def verify_local_image(
     Returns:
         bool: True if local image tag is found
     """
-    image_match = list()
+    matched_images = list()
     try:  # append sha256 if needed
         if final_sha256 != "":
             source_endpoint_and_sha256: str = str(f"{source_endpoint}@{final_sha256}")
-            image_match = docker_client.images.list(filters={"reference": f"{source_endpoint_and_sha256}"})
-            if len(image_match) > 0:
+            matched_images = docker_client.images.list(filters={"reference": f"{source_endpoint_and_sha256}"})
+            if len(matched_images) > 0:
                 logger.info(f"{source_endpoint_and_sha256} - source image exists locally")
             else:
                 logger.warning(f"{source_endpoint_and_sha256} - image not found locally")
                 pull_image(logger, docker_client, source_repository, source_tag)
                 return False
         else:  # no sha256, just a tag
-            image_match = docker_client.images.list(filters={"reference": f"{source_endpoint}"})
-            if len(image_match) > 0:
+            matched_images = docker_client.images.list(filters={"reference": f"{source_endpoint}"})
+            if len(matched_images) > 0:
                 logger.info(f"{source_endpoint} - source image exists locally")
             else:
                 logger.warning(f"{source_endpoint} - image not found locally")
                 pull_image(logger, docker_client, source_repository, source_tag)
-                return False
+                matched_images = docker_client.images.list(filters={"reference": f"{source_endpoint}"})
 
-        # replace docker.io as its implicit and not returned by the API when doing lookups
-        docker_api.tag(source_endpoint, destination_repository, destination_tag)
+        # tag it
+        matched_images[0].tag(repository=destination_repository, tag=destination_tag)
         return True
     except docker.errors.ImageNotFound as e:
         logger.warning(f"{source_endpoint} - image not found locally")

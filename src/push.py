@@ -17,6 +17,7 @@ def push_image(logger: Any, docker_client: Any, repository: LiteralString, tag: 
     try:
         logger.info(f"{repository}:{tag} - pushing image")
         docker_client.images.push(repository, tag=tag)
+        # TODO if above returns None should this then be an if condition?
         logger.success(f"{repository}:{tag} - imaged pushed successfully")
         return True
     except docker.errors.APIError as e:

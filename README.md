@@ -150,11 +150,11 @@ images:
 
 ## Installation
 
-- Check the assets for releases for single-file releases of this script with dependencies.
+- Check the release assets for releases for single-file binary executables of this script with dependencies.
 - For local installation/use of the raw script, I use a local virtual environment to isolate dependencies:
 
 ```bash
-git clone https://github.com/DaemonDude23/container-image-replicator.git -b v0.11.0
+git clone https://github.com/DaemonDude23/container-image-replicator.git -b v0.11.1
 cd container-image-replicator
 ```
 
@@ -168,7 +168,7 @@ Single-file executibles which contain all dependencies (similar to a Go binary) 
 
 Install:
    ```bash
-   wget https://github.com/DaemonDude23/container-image-repliactor/releases/download/v0.11.0/container-image-repliactor.bin
+   wget https://github.com/DaemonDude23/container-image-repliactor/releases/download/v0.11.1/container-image-repliactor.bin
    mv container-image-replicator.bin container-image-replicator
    sudo install container-image-replicator /usr/local/bin
    ```

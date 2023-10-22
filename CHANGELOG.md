@@ -2,6 +2,12 @@
 
 ---
 
+# [v0.11.1](https://github.com/DaemonDude23/container-image-replicator/releases/tag/v0.11.1) - October 22 2023
+
+**Bugfixes**
+
+- Fixed issue where CIR was unable to re-tag images.
+
 # [v0.11.0](https://github.com/DaemonDude23/container-image-replicator/releases/tag/v0.11.0) - October 22 2023
 
 - No code changes, but now all binaries (Linux. MacOS, Windows) are now a part of this release. Otherwise, just GitHub workflow tweaks.
