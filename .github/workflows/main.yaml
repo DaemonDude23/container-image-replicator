@@ -1,4 +1,4 @@
-name: Package Application with Pyinstaller
+name: Package Application with Nuitka
 "on":
   push:
     branches: [ main ]
@@ -30,12 +30,9 @@ jobs:
         script-name: container-image-replicator.py
         standalone: true
         working-directory: src
-    # - name: Rename binary for Linux
-    #   if: runner.os == 'Linux'
-    #   run: mv src/build/container-image-replicator.bin src/build/container-image-replicator
     - name: Rename binary for macOS
       if: runner.os == 'macOS'
-      run: mv src/build/container-image-replicator.bin src/build/container-image-replicator.mac
+      run: mv src/build/container-image-replicator.bin src/build/container-image-replicator.macos
     - name: ${{ runner.os }} Release
       uses: softprops/action-gh-release@v1
       with:
@@ -45,4 +42,4 @@ jobs:
         files: |
           src/build/container-image-replicator.bin
           src/build/container-image-replicator.exe
-          src/build/container-image-replicator.mac
+          src/build/container-image-replicator.macos

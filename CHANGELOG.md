@@ -2,13 +2,17 @@
 
 ---
 
+# [v0.11.0](https://github.com/DaemonDude23/container-image-replicator/releases/tag/v0.11.0) - October 3 2023
+
+- No code changes, but now all binaries (Linux. MacOS, Windows) are now a part of this release. Otherwise, just GitHub workflow tweaks.
+
 # [v0.10.0](https://github.com/DaemonDude23/container-image-replicator/releases/tag/v0.10.0) - October 3 2023
 
 **Enhancements**
 
 - Added the ability to **build** _and_ push images, not just replicate them from somewhere to somewhere. See config syntax examples in [README.md](README.md).
 - Switched to **Nuitka**, replacing **PyInstaller** for generating binaries. Let me know if any of the builds (Linux/Windows/MacOS) have issues.
-  - Currently building a Python `3.11.5` image.
+  - Currently building a Python `3.11.6` image.
 
 **Bugfixes**
 

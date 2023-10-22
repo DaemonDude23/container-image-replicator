@@ -12,9 +12,13 @@
   - [Putting it in your `$PATH`](#putting-it-in-your-path)
     - [Linux](#linux)
       - [Binary](#binary)
+    - [MacOS](#macos)
+      - [Binary](#binary-1)
+    - [Windows](#windows)
+      - [Binary](#binary-2)
       - [User-Level Python Requirements](#user-level-python-requirements)
     - [Virtualenv with pip](#virtualenv-with-pip)
-  - [MacOS](#macos)
+  - [MacOS](#macos-1)
   - [Run](#run)
     - [Example](#example)
     - [kubectl to list all of your container images](#kubectl-to-list-all-of-your-container-images)
@@ -171,6 +175,18 @@ Install:
 
 Now it'll be available in your `$PATH`.
 
+### MacOS
+
+#### Binary
+
+???
+
+### Windows
+
+#### Binary
+
+Download the `.exe` file and execute it on the CLI.
+
 #### User-Level Python Requirements
 
 1. Create symlink:
@@ -188,7 +204,7 @@ pip3 install -U -r /path/to/src/requirements.txt
 Assuming virtualenv is already installed...
 
 ```bash
-virtualenv --python=python3.11.5 ./venv/
+virtualenv --python=python3.11.6 ./venv/
 source ./venv/bin/activate
 ./venv/bin/python -m pip install --upgrade pip
 pip3 install -U -r ./src/requirements.txt
