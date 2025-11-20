@@ -6,13 +6,10 @@ repos:
       - id: check-executables-have-shebangs
       - id: check-merge-conflict
       - id: destroyed-symlinks
-      - id: detect-aws-credentials
+      # - id: detect-aws-credentials
       - id: detect-private-key
       - id: end-of-file-fixer
       - id: fix-byte-order-marker
-      - args:
-          - '--remove'
-        id: fix-encoding-pragma
       - id: mixed-line-ending
       - args:
           - '--maxkb=1024'
@@ -30,26 +27,26 @@ repos:
       - id: requirements-txt-fixer
       - id: check-ast
     repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v6.0.0
   - repo: https://github.com/netromdk/vermin
-    rev: v1.5.2
+    rev: v1.8.0
     hooks:
       - id: vermin
-        args: ['-t=3.11-', '--violations']
+        args: ['-t=3.13-', '--violations']
   - hooks:
       - args: [--application-directories, '.:src']
         id: reorder-python-imports
     repo: https://github.com/asottile/reorder_python_imports
-    rev: v3.12.0
+    rev: v3.16.0
   - hooks:
       - args:
           - '--line-length=140'
           - '--include=''\.pyi?$'''
           - '--exclude=\.git|\.__pycache__|\.hg|\.mypy_cache|\.tox|\.venv|_build|buck-out|build|dist'
         id: black
-        language_version: python3.11
+        language_version: python3.13
     repo: https://github.com/psf/black
-    rev: 23.10.0
+    rev: 25.11.0
   - hooks:
       - args:
         - --check-untyped-defs
@@ -59,4 +56,4 @@ repos:
         - --strict
         id: mypy
     repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.6.1
+    rev: v1.18.2

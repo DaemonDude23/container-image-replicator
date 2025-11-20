@@ -17,7 +17,7 @@
     - [Windows](#windows)
       - [Binary](#binary-2)
       - [User-Level Python Requirements](#user-level-python-requirements)
-    - [Virtualenv with pip](#virtualenv-with-pip)
+    - [Virtual Environment with pip](#virtual-environment-with-pip)
   - [MacOS](#macos-1)
   - [Run](#run)
     - [Example](#example)
@@ -74,9 +74,11 @@ You can re-tag an image however you like, or keep it the same as it was.
 **This script does not handle authentication!**
 
 If you're logging into [AWS ECR](https://docs.aws.amazon.com/AmazonECR/latest/userguide/getting-started-cli.html), for example, first login with something like:
+
 ```bash
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 000000000000.dkr.ecr.us-east-1.amazonaws.com
 ```
+
 See [References](#references).
 
 ## CLI
@@ -154,7 +156,7 @@ images:
 - For local installation/use of the raw script, I use a local virtual environment to isolate dependencies:
 
 ```bash
-git clone https://github.com/DaemonDude23/container-image-replicator.git -b v0.11.1
+git clone https://github.com/DaemonDude23/container-image-replicator.git -b v0.12.0
 cd container-image-replicator
 ```
 
@@ -168,7 +170,7 @@ Single-file executibles which contain all dependencies (similar to a Go binary) 
 
 Install:
    ```bash
-   wget https://github.com/DaemonDude23/container-image-repliactor/releases/download/v0.11.1/container-image-repliactor.bin
+   wget https://github.com/DaemonDude23/container-image-repliactor/releases/download/v0.12.0/container-image-repliactor.bin
    mv container-image-replicator.bin container-image-replicator
    sudo install container-image-replicator /usr/local/bin
    ```
@@ -179,7 +181,7 @@ Now it'll be available in your `$PATH`.
 
 #### Binary
 
-???
+TODO
 
 ### Windows
 
@@ -190,21 +192,22 @@ Download the `.exe` file and execute it on the CLI.
 #### User-Level Python Requirements
 
 1. Create symlink:
+
 ```bash
 sudo ln -s /absolute/path/to/src/container-image-replicator.py /usr/local/bin/container-image-replicator
 ```
+
 2. Install dependencies:
+
 ```bash
 # latest and greatest dependency versions
 pip3 install -U -r /path/to/src/requirements.txt
 ```
 
-### Virtualenv with pip
-
-Assuming virtualenv is already installed...
+### Virtual Environment with pip
 
 ```bash
-virtualenv --python=python3.11.6 ./venv/
+python -m venv venv/
 source ./venv/bin/activate
 ./venv/bin/python -m pip install --upgrade pip
 pip3 install -U -r ./src/requirements.txt

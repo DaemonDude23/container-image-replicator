@@ -2,6 +2,12 @@
 
 ---
 
+# [v0.12.0](https://github.com/DaemonDude23/container-image-replicator/releases/tag/v0.12.0) - November 20 2025
+
+**Bugfixes**
+
+TODO
+
 # [v0.11.1](https://github.com/DaemonDude23/container-image-replicator/releases/tag/v0.11.1) - October 22 2023
 
 **Bugfixes**

@@ -50,7 +50,7 @@ def init_arg_parser() -> Any:
         args_optional = parser.add_argument_group("optional")
         args_required = parser.add_argument_group("required")
 
-        args_optional.add_argument("--version", "-v", action="version", version="v0.11.1")
+        args_optional.add_argument("--version", "-v", action="version", version="v0.12.0")
 
         args_optional.add_argument(
             "--max-workers",
