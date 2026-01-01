@@ -34,7 +34,7 @@ jobs:
       if: runner.os == 'macOS'
       run: mv src/build/container-image-replicator.bin src/build/container-image-replicator.macos
     - name: ${{ runner.os }} Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         draft: true
         prerelease: true
