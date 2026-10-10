@@ -37,9 +37,8 @@ jobs:
         uses: Nuitka/Nuitka-Action@main
         with:
           nuitka-version: main
-          onefile: true
+          mode: onefile
           script-name: container-image-replicator.py
-          standalone: true
           working-directory: src
       - name: Rename binary for macOS
         if: runner.os == 'macOS'
