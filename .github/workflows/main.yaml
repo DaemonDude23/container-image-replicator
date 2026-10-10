@@ -45,7 +45,7 @@ jobs:
         if: runner.os == 'macOS'
         run: mv src/build/container-image-replicator.bin src/build/container-image-replicator.macos
       - name: Upload binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: binaries-${{ runner.os }}
           path: |
