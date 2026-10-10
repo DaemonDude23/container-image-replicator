@@ -14,15 +14,20 @@ from push import push_image
 
 def parse_image_list_replicate(logger: Any, image: Dict[LiteralString, Any]) -> None:
     try:
-        isinstance(image["source"]["repository"], str)
-        isinstance(image["source"]["tag"], str)
+        if not isinstance(image["source"], dict):
+            raise ValueError("source must be a mapping")
+        if not isinstance(image["source"].get("repository"), str) or not isinstance(image["source"].get("tag"), str):
+            raise ValueError("source.repository and source.tag must be strings")
+        if not isinstance(image["destination"], dict) or not isinstance(image["destination"].get("repository"), str):
+            raise ValueError("destination.repository must be a string")
         try:
-            isinstance(image["destination"]["tag"], str | int | float)
+            if not isinstance(image["destination"]["tag"], str | int | float):
+                raise ValueError("destination.tag must be a string or number")
         except KeyError:
             logger.debug("no destination tag provided - using source tag as a fallback")
-    except KeyError as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.critical(f"syntax error in list file provided: {e}")
-        exit(1)
+        raise SystemExit(1)
 
 
 def check_remote(
@@ -55,18 +60,12 @@ def check_remote(
         force_pull (bool): force pull, used for immutable tags
         force_push (bool): force push, used for immutable tags
     """
-    if arguments.force_pull_push or force_pull:
-        pull_image(logger, docker_client, source_repository, source_tag)
-    if arguments.force_pull_push or force_push:
-        push_image(logger, docker_client, destination_repository, destination_tag)
-
-    verify_destination, status_code = verify_destination_image(logger, docker_client, destination_endpoint)
-    if verify_destination == "exists":
-        logger.info(f"{destination_endpoint} - destination image exists in registry")
-    elif verify_destination == "does not exist" or status_code == 404:
-        logger.warning(f"{destination_endpoint} - destination image not found in registry")
-        # see if image exists locally and pull from the source registry if it doesn't
-        verify_local_image(
+    should_force_pull = arguments.force_pull_push or force_pull
+    should_force_push = arguments.force_pull_push or force_push
+    if should_force_pull and not pull_image(logger, docker_client, source_repository, source_tag):
+        return False
+    if should_force_push:
+        if not verify_local_image(
             logger,
             docker_api,
             docker_client,
@@ -76,10 +75,34 @@ def check_remote(
             destination_repository,
             destination_tag,
             final_sha256,
-        )
-        push_image(logger, docker_client, destination_repository, destination_tag)
+        ):
+            logger.error(f"{source_endpoint} - unable to prepare local image for push")
+            return False
+        return push_image(logger, docker_client, destination_repository, destination_tag)
+
+    verify_destination, status_code = verify_destination_image(logger, docker_client, destination_endpoint)
+    if verify_destination == "exists":
+        logger.info(f"{destination_endpoint} - destination image exists in registry")
+    elif verify_destination == "does not exist" or status_code == 404:
+        logger.warning(f"{destination_endpoint} - destination image not found in registry")
+        # see if image exists locally and pull from the source registry if it doesn't
+        if not verify_local_image(
+            logger,
+            docker_api,
+            docker_client,
+            source_endpoint,
+            source_repository,
+            source_tag,
+            destination_repository,
+            destination_tag,
+            final_sha256,
+        ):
+            logger.error(f"{source_endpoint} - unable to prepare local image for push")
+            return False
+        return push_image(logger, docker_client, destination_repository, destination_tag)
     else:
         logger.error(f"{destination_endpoint} - {verify_destination}")
+        return False
 
     return True
 
@@ -109,33 +132,20 @@ def verify_local_image(
     Returns:
         bool: True if local image tag is found
     """
-    matched_images = list()
-    try:  # append sha256 if needed
-        if final_sha256 != "":
-            source_endpoint_and_sha256: str = str(f"{source_endpoint}@{final_sha256}")
-            matched_images = docker_client.images.list(filters={"reference": f"{source_endpoint_and_sha256}"})
-            if len(matched_images) > 0:
-                logger.info(f"{source_endpoint_and_sha256} - source image exists locally")
-            else:
-                logger.warning(f"{source_endpoint_and_sha256} - image not found locally")
-                pull_image(logger, docker_client, source_repository, source_tag)
-                return False
-        else:  # no sha256, just a tag
-            matched_images = docker_client.images.list(filters={"reference": f"{source_endpoint}"})
-            if len(matched_images) > 0:
-                logger.info(f"{source_endpoint} - source image exists locally")
-            else:
-                logger.warning(f"{source_endpoint} - image not found locally")
-                pull_image(logger, docker_client, source_repository, source_tag)
-                matched_images = docker_client.images.list(filters={"reference": f"{source_endpoint}"})
-
-        # tag it
-        matched_images[0].tag(repository=destination_repository, tag=destination_tag)
+    source_reference = f"{source_repository}@sha256:{final_sha256}" if final_sha256 else str(source_endpoint)
+    try:
+        try:
+            image = docker_client.images.get(source_reference)
+            logger.info(f"{source_reference} - source image exists locally")
+        except docker.errors.ImageNotFound:
+            logger.info(f"{source_reference} - pulling source image")
+            image = docker_client.images.pull(source_reference) if final_sha256 else docker_client.images.pull(source_repository, tag=source_tag)
+        if not image.tag(repository=destination_repository, tag=destination_tag):
+            logger.error(f"{source_reference} - failed to tag image as {destination_repository}:{destination_tag}")
+            return False
         return True
-    except docker.errors.ImageNotFound as e:
-        logger.warning(f"{source_endpoint} - image not found locally")
-        logger.debug(e)
-        pull_image(logger, docker_client, source_repository, source_tag)
+    except (docker.errors.APIError, docker.errors.ImageNotFound) as e:
+        logger.error(f"{source_reference} - unable to retrieve image: {e}")
         return False
 
 
@@ -154,7 +164,7 @@ def pull_image(logger: Any, docker_client: Any, repository: LiteralString, tag: 
         docker_client.images.pull(repository, tag=tag)
         logger.success(f"{repository}:{tag} - image pulled successfully")
         return True
-    except docker.errors.APIError or docker.errors.ImageNotFound as e:
+    except (docker.errors.APIError, docker.errors.ImageNotFound) as e:
         logger.warning(e)
         return False
 
@@ -172,6 +182,7 @@ def replicate(logger: Any, arguments: Any, docker_api: Any, docker_client: Any, 
     """
     logger.info(f"preparing threads for replicating. Maximum threads: {arguments.max_workers}")
     thread_pool = ThreadPoolExecutor(max_workers=arguments.max_workers)
+    threads = []
     for image in list(image_list):
         # remove docker.io registry prefix as its implicit and not returned by the API when doing lookups
         source_repository: str = re.sub(r"^docker.io/", "", str(image["source"]["repository"]))
@@ -205,7 +216,7 @@ def replicate(logger: Any, arguments: Any, docker_api: Any, docker_client: Any, 
                 logger.debug(f"{final_sha256} - using this valid sha256")
             else:
                 logger.warning(f"{source_repository}:@sha256:{source_sha256} - skipping image because sha256 is not valid")
-                break
+                continue
         except KeyError:
             logger.debug("no valid source sha256 provided, not using sha256 suffix on image URI")
 
@@ -214,7 +225,7 @@ def replicate(logger: Any, arguments: Any, docker_api: Any, docker_client: Any, 
         destination_endpoint: str = str(f"{destination_repository}:{destination_tag}")
 
         # create threads
-        threads = [
+        threads.append(
             thread_pool.submit(
                 check_remote,
                 logger,
@@ -231,9 +242,15 @@ def replicate(logger: Any, arguments: Any, docker_api: Any, docker_client: Any, 
                 force_pull,
                 force_push,
             )
-        ]
+        )
 
     wait(threads, return_when="ALL_COMPLETED")
+    for thread in threads:
+        try:
+            thread.result()
+        except Exception as e:
+            logger.error(f"replication worker failed: {e}")
+    thread_pool.shutdown(wait=True)
     return True
 
 
@@ -246,7 +263,7 @@ def validate_sha256(sha256_hash: LiteralString) -> bool:
     Returns:
         bool: True if it is a valid sha256 string
     """
-    if re.search(r"\b[A-Fa-f0-9]{64}\b", sha256_hash):  # https://stackoverflow.com/a/43599586/11051914
+    if re.fullmatch(r"[A-Fa-f0-9]{64}", sha256_hash):
         return True
     else:
         return False

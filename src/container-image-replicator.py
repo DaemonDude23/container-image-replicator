@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.11
+#!/usr/bin/env python3
 import argparse
 import logging
 from pathlib import Path
@@ -21,6 +21,16 @@ from replicate import replicate
 # mypy: disable-error-code = attr-defined
 verboselogs.install()
 logger = logging.getLogger(__name__)
+
+
+def positive_int(value: str) -> int:
+    try:
+        parsed_value = int(value)
+    except ValueError as e:
+        raise argparse.ArgumentTypeError("must be an integer") from e
+    if parsed_value < 1:
+        raise argparse.ArgumentTypeError("must be greater than zero")
+    return parsed_value
 
 
 def init_docker() -> Any | Any:
@@ -50,7 +60,7 @@ def init_arg_parser() -> Any:
         args_optional = parser.add_argument_group("optional")
         args_required = parser.add_argument_group("required")
 
-        args_optional.add_argument("--version", "-v", action="version", version="v0.12.0")
+        args_optional.add_argument("--version", "-v", action="version", version="v0.13.0")
 
         args_optional.add_argument(
             "--max-workers",
@@ -58,12 +68,13 @@ def init_arg_parser() -> Any:
             default=2,
             dest="max_workers",
             help="maximum number of worker threads to execute at any one time. One thread per container image",
-            type=int,
+            type=positive_int,
         )
 
         args_optional.add_argument(
             "--log-level",
             action="store",
+            choices=("INFO", "ERROR", "DEBUG"),
             default="INFO",
             dest="log_level",
             help="set logging level (INFO, ERROR, DEBUG)",
@@ -105,22 +116,26 @@ def parse_image_list_yaml(image_list: Dict[LiteralString, Any]) -> tuple[list[An
     Returns:
         bool: True if the whole file parsed as expected
     """
+    if not isinstance(image_list, dict) or not isinstance(image_list.get("images"), list):
+        logger.critical('syntax error in list file provided: top-level "images" must be a list')
+        exit(1)
+
     build_list = list()
     replicate_list = list()
     try:
         for image in image_list["images"]:
-            try:
-                if isinstance(image["build"], dict):
-                    parse_image_list_build(logger, image)
-                    build_list.append(image)
-            except KeyError:
-                pass
-            try:
-                if isinstance(image["source"], dict):
-                    parse_image_list_replicate(logger, image)
-                    replicate_list.append(image)
-            except KeyError:
-                pass
+            if not isinstance(image, dict):
+                logger.critical("syntax error in list file provided: each images entry must be a mapping")
+                exit(1)
+            if "build" in image:
+                parse_image_list_build(logger, image)
+                build_list.append(image)
+            if "source" in image:
+                parse_image_list_replicate(logger, image)
+                replicate_list.append(image)
+            if "build" not in image and "source" not in image:
+                logger.critical('syntax error in list file provided: each entry needs "build" or "source"')
+                exit(1)
     except KeyError as e:
         logger.critical(f"syntax error in list file provided:\n{e}")
         exit(1)
@@ -128,26 +143,15 @@ def parse_image_list_yaml(image_list: Dict[LiteralString, Any]) -> tuple[list[An
     return build_list, replicate_list
 
 
-def main(docker_api: object) -> None:
-    """main
-
-    Args:
-        docker_api (object): api object
-    """
+def main() -> None:
+    """Parse configuration and run the requested image operations."""
     arguments = init_arg_parser()
 
-    if arguments.log_level == "INFO":
-        log_level = "INFO"
-    elif arguments.log_level == "ERROR":
-        log_level = "ERROR"
-    elif arguments.log_level == "DEBUG":
-        log_level = "DEBUG"
-    else:
-        logging.error("failed to determine the specified value for --log-level")
+    log_level = arguments.log_level
 
     if arguments.no_colors:
         logging.basicConfig(
-            level=eval(f"logging.{log_level}"),
+            level=getattr(logging, log_level),
             datefmt="%Y-%m-%dT%H:%M:%S%z",
             stream=stdout,
             format="%(asctime)s %(levelname)s %(message)s",
@@ -155,6 +159,7 @@ def main(docker_api: object) -> None:
     else:
         coloredlogs.install(level=log_level, fmt="%(asctime)s %(levelname)s %(message)s", datefmt="%Y-%m-%dT%H:%M:%S%z")
 
+    docker_client, docker_api = init_docker()
     try:
         image_list = yaml.safe_load(Path(arguments.input_file).read_text())
         build_list, replicate_list = parse_image_list_yaml(image_list)
@@ -173,17 +178,16 @@ def main(docker_api: object) -> None:
             logger.warning("no actions found that need taking... strange")
     except FileNotFoundError:
         logger.critical(f"input file not found. Cannot continue: {Path(arguments.input_file)}")
-    except yaml.parser.ParserError as e:
+    except yaml.YAMLError as e:
         logger.critical(f"failed to parse input file: {Path(arguments.input_file)} with error: {e}")
+    finally:
+        docker_client.close()
 
 
 if __name__ == "__main__":
     try:
-        docker_client, docker_api = init_docker()
-        main(docker_api)
-        docker_client.close()
+        main()
     except docker.errors.DockerException:
         print("Error: Unable to communicate with docker daemon")
     except KeyboardInterrupt:
-        docker_client.close()
         exit(1)

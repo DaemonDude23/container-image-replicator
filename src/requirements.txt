@@ -1,7 +1,7 @@
 coloredlogs==15.0.1
-docker==7.1.0
+docker==7.2.0
 mypy_extensions==1.1.0
 PyYAML==6.0.3
-requests==2.32.5
-typing_extensions==4.15.0
+requests==2.34.2
+typing_extensions==4.16.0
 verboselogs==1.7

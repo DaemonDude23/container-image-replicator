@@ -37,7 +37,7 @@
 [![Linux](https://svgshare.com/i/Zhy.svg)](https://svgshare.com/i/Zhy.svg)
 [![Windows](https://svgshare.com/i/ZhY.svg)](https://svgshare.com/i/ZhY.svg)
 [![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/)
-[![Package Application with Pyinstaller](https://github.com/DaemonDude23/container-image-replicator/actions/workflows/main.yaml/badge.svg?branch=main)](https://github.com/DaemonDude23/container-image-replicator/actions/workflows/main.yaml)
+[![Package Application with Nuitka](https://github.com/DaemonDude23/container-image-replicator/actions/workflows/main.yaml/badge.svg)](https://github.com/DaemonDude23/container-image-replicator/actions/workflows/main.yaml)
 
 # About
 
@@ -68,6 +68,8 @@ images:
 
 And pulls/downloads the image from the source repository, re-tags it, and pushes/uploads it into the destination registry.
 You can re-tag an image however you like, or keep it the same as it was.
+
+The project is in maintenance mode. Releases focus on dependency updates and fixes for clear bugs.
 
 # Usage
 
@@ -138,7 +140,7 @@ images:
       build_args:  # optional
         AWS_ACCOUNT_ID: 000000000000  # optional
       build_folder: ../tests/builds/  # required
-      dockerfile: ../tests/builds/Dockerfile  # optional
+      dockerfile: ../tests/builds/Dockerfile  # optional; defaults to Dockerfile in build_folder
       tags:  # required
         - v1.0.0
 ```
@@ -147,7 +149,7 @@ images:
 
 ## Requirements:
 
-- Python `3.6+` (or manually adjust [./src/requirements.txt](./src/requirements.txt) with more broad constraints)
+- Python `3.11+`
 - `docker` installed and running on the system where this script executed, and sufficient permissions for the user executing `container-image-replicator`
 
 ## Installation
@@ -156,7 +158,7 @@ images:
 - For local installation/use of the raw script, I use a local virtual environment to isolate dependencies:
 
 ```bash
-git clone https://github.com/DaemonDude23/container-image-replicator.git -b v0.12.0
+git clone https://github.com/DaemonDude23/container-image-replicator.git -b v0.13.0
 cd container-image-replicator
 ```
 
@@ -170,7 +172,7 @@ Single-file executibles which contain all dependencies (similar to a Go binary) 
 
 Install:
    ```bash
-   wget https://github.com/DaemonDude23/container-image-repliactor/releases/download/v0.12.0/container-image-repliactor.bin
+   wget https://github.com/DaemonDude23/container-image-replicator/releases/download/v0.13.0/container-image-replicator.bin
    mv container-image-replicator.bin container-image-replicator
    sudo install container-image-replicator /usr/local/bin
    ```
@@ -215,11 +217,11 @@ pip3 install -U -r ./src/requirements.txt
 
 ## MacOS
 
-Do the same as above, but use the mac-specific `requirements.txt` file:
+Use the same requirements file as above:
 
 ```bash
 # latest and greatest dependency versions
-pip3 install -U -r /path/to/src/requirements-mac.txt
+pip3 install -U -r /path/to/src/requirements.txt
 ```
 
 ## Run
@@ -267,7 +269,7 @@ mypy --install-types --non-interactive --ignore-missing-imports ./src/
 
 If you need a named capture group to capture logs in a semi-structured way, this should work:
 
-```
+```regexp
 (?<timestamp>^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}-\d{4})\s(?<level>\w+)\s(?<message>.+)
 ```
 

@@ -1,104 +1,111 @@
-import logging
 from concurrent.futures import ThreadPoolExecutor
-from concurrent.futures import wait
-from json import dumps
+from concurrent.futures import as_completed
 from pathlib import Path
-from sys import exit
 from typing import Any
-from typing import Dict
-from typing import List
 
 import docker
-from typing_extensions import LiteralString
 
 from push import push_image
 
 
 def construct_build(logger: Any, arguments: Any, docker_client: Any, image_list: list[dict[str, Any]]) -> bool:
     logger.info(f"preparing threads for building. Maximum threads: {arguments.max_workers}")
-    thread_pool = ThreadPoolExecutor(max_workers=arguments.max_workers)
-    for image in list(image_list):
-        build_folder: Path = Path(image["build"]["build_folder"])
-        destination_repository: str = str(image["destination"]["repository"])
-        dockerfile: Path = Path(image["build"]["dockerfile"])
+    futures = []
+    with ThreadPoolExecutor(max_workers=arguments.max_workers) as thread_pool:
+        for image in image_list:
+            build_folder = Path(image["build"]["build_folder"]).resolve()
+            dockerfile = Path(image["build"].get("dockerfile", build_folder / "Dockerfile")).resolve()
+            destination_repository = str(image["destination"]["repository"])
+            build_args = dict(image["build"].get("build_args", {}))
+            tags = [str(tag) for tag in image["build"].get("tags", [])]
 
-        # construct dict to contain build info for this image
-        build_args = dict(image["build"]["build_args"])
-        tags = list(image["build"]["tags"])
+            if not build_folder.is_dir():
+                logger.error(f'Unable to locate the build path: "{build_folder}"')
+                continue
+            if not dockerfile.is_file():
+                logger.error(f'Unable to locate the Dockerfile: "{dockerfile}"')
+                continue
+            try:
+                dockerfile_arg = str(dockerfile.relative_to(build_folder))
+            except ValueError:
+                logger.error(f'Dockerfile must be inside the build context: "{dockerfile}"')
+                continue
+            if not tags:
+                logger.error(f'No build tags were configured for "{destination_repository}"')
+                continue
 
-        # validations
-        # validate build_path
-        if Path.is_dir(build_folder):
-            logger.debug(f'Build path found at: "{build_folder}"')
-        else:
-            logging.error(f'Unable to locate the build path: "{build_folder}" in {dumps(image)}')
-            break  # skip building/pushing
-
-        # validate dockerfile path
-        # TODO check if Dockerfile is in the build_folder
-        if Path.is_file(dockerfile):
-            logger.debug(f'Dockerfile found at: "{dockerfile}"')
-        else:
-            logging.error(f'Unable to locate the Dockerfile: "{dockerfile}" in {dumps(image)}"')
-            break  # skip building/pushing
-
-        # TODO validate that there is at least one tag
-        # combine repositories and tags
-        destination_endpoints = list()
-        for tag in tags:
-            destination_endpoints.append(f"{destination_repository}:{tag}")
-
-        # create threads
-        threads = [
-            thread_pool.submit(
-                docker_build, logger, arguments, build_folder, docker_client, dockerfile, destination_endpoints, tags, build_args
+            futures.append(
+                thread_pool.submit(
+                    docker_build,
+                    logger,
+                    docker_client,
+                    build_folder,
+                    dockerfile_arg,
+                    destination_repository,
+                    tags,
+                    build_args,
+                )
             )
-        ]
 
-    # if there were no threads just continue
-    try:
-        if len(threads) > 0:
-            wait(threads, return_when="ALL_COMPLETED")
-    except UnboundLocalError:
-        pass
-
+        for future in as_completed(futures):
+            try:
+                future.result()
+            except Exception as e:
+                logger.error(f"build worker failed: {e}")
     return True
 
 
 def docker_build(
     logger: Any,
-    arguments: Any,
-    build_folder: Path,
     docker_client: Any,
-    dockerfile: Path,
-    destination_endpoints: List[LiteralString],
-    tags: List[LiteralString],
-    build_args: Dict[str, str | int | float],
-) -> Any:
+    build_folder: Path,
+    dockerfile: str,
+    repository: str,
+    tags: list[str],
+    build_args: dict[str, str | int | float],
+) -> bool:
+    first_tag, *additional_tags = tags
+    first_endpoint = f"{repository}:{first_tag}"
     try:
-        for endpoint in destination_endpoints:
-            repository, tag = endpoint.split(":")
+        image, _ = docker_client.images.build(
+            path=str(build_folder),
+            dockerfile=dockerfile,
+            tag=first_endpoint,
+            buildargs=build_args,
+        )
+        logger.success(f"build succeeded: {first_endpoint}")
 
-            build = docker_client.images.build(path=str(build_folder), tag=endpoint)
-            logger.success(f"build succeeded: {endpoint}")
+        for tag in additional_tags:
+            endpoint = f"{repository}:{tag}"
+            if not image.tag(repository=repository, tag=tag):
+                logger.error(f"failed to tag built image: {endpoint}")
+                return False
 
-            push_image(logger, docker_client, repository, tag)
-            logger.success(f"push (from build) succeeded: {endpoint}")
+        for tag in tags:
+            if not push_image(logger, docker_client, repository, tag):
+                return False
+            logger.success(f"push (from build) succeeded: {repository}:{tag}")
+    except (docker.errors.APIError, docker.errors.BuildError, TypeError) as e:
+        logger.error(f"build failed for {repository}: {e}")
+        return False
 
-    except docker.errors.APIError as e:
-        return f"{e}"
-    except docker.errors.BuildError as e:
-        return f"{e}"
-    except TypeError as e:
-        return f"{e}"
-
-    return "WOO"
+    return True
 
 
-def parse_image_list_build(logger: Any, image: Dict[LiteralString, Any]) -> None:
+def parse_image_list_build(logger: Any, image: dict[str, Any]) -> None:
     try:
-        isinstance(image["build"], dict)
-        # TODO more here
-    except KeyError as e:
+        if not isinstance(image["build"], dict):
+            raise ValueError("build must be a mapping")
+        if not isinstance(image["destination"], dict) or not isinstance(image["destination"].get("repository"), str):
+            raise ValueError("destination.repository must be a string")
+        if not isinstance(image["build"].get("build_folder"), str):
+            raise ValueError("build.build_folder must be a string")
+        if "dockerfile" in image["build"] and not isinstance(image["build"]["dockerfile"], str):
+            raise ValueError("build.dockerfile must be a string")
+        if "build_args" in image["build"] and not isinstance(image["build"]["build_args"], dict):
+            raise ValueError("build.build_args must be a mapping")
+        if not isinstance(image["build"].get("tags"), list) or not image["build"]["tags"]:
+            raise ValueError("build.tags must be a non-empty list")
+    except (KeyError, TypeError, ValueError) as e:
         logger.critical(f"syntax error in list file provided: {e}")
-        exit(1)
+        raise SystemExit(1)

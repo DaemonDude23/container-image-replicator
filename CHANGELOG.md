@@ -2,11 +2,22 @@
 
 ---
 
-# [v0.12.0](https://github.com/DaemonDude23/container-image-replicator/releases/tag/v0.12.0) - November 20 2025
+# [v0.13.0](https://github.com/DaemonDude23/container-image-replicator/releases/tag/v0.13.0) - October 9 2026
 
 **Bugfixes**
 
-TODO
+- Wait for every image build and replication task to finish, and report worker failures.
+- Honor the configured Dockerfile and build arguments; build once and apply every configured tag.
+- Stop pushing when a source pull or local image preparation fails.
+- Validate malformed YAML configuration and report YAML syntax errors consistently.
+- Fix forced pushes so the source image is tagged for the destination before upload.
+
+**Dependencies and maintenance**
+
+- Update `docker` to `7.2.0`, `requests` to `2.34.2`, and `typing-extensions` to `4.16.0`.
+- Use the same current dependency pins on macOS and other platforms.
+- Run monthly grouped Dependabot updates for Python packages and GitHub Actions.
+- Build binaries only for version tags and upload the platform artifacts together for draft release preparation with `gh`.
 
 # [v0.11.1](https://github.com/DaemonDude23/container-image-replicator/releases/tag/v0.11.1) - October 22 2023
 
