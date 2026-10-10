@@ -16,6 +16,7 @@
 
 - Update `docker` to `7.2.0`, `requests` to `2.34.2`, and `typing-extensions` to `4.16.0`.
 - Use the same current dependency pins on macOS and other platforms.
+- Pin the Nuitka GitHub Action and compiler versions used for release builds.
 - Run monthly grouped Dependabot updates for Python packages and GitHub Actions.
 - Build binaries only for version tags and upload the platform artifacts together for draft release preparation with `gh`.
 
